@@ -1,26 +1,5 @@
 Booking System
-A full-stack company meeting and service booking management system built with Next.js 14, PostgreSQL, and Prisma. Designed for organisations managing room bookings, meeting schedules, and departmental resources.
----
-Tech Stack
-Layer	Technology
-Frontend	Next.js 14 (App Router), TypeScript, Tailwind CSS
-Backend	Next.js API Routes
-Database	PostgreSQL via Prisma ORM
-Caching	Redis (Upstash)
-Authentication	JWT + Role-Based Access Control
-Email	Resend / Nodemailer
-PDF Generation	PDFKit
-State Management	Zustand
-Validation	Zod
----
-Prerequisites
-Make sure these are installed on your machine before starting:
-Node.js 18.17 or higher
-npm 9 or higher
-PostgreSQL 14 or higher
-Redis (optional for local dev)
-Git
----
+
 Getting Started
 1. Clone the Repository
 ```bash
