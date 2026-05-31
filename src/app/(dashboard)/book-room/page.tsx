@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { rooms, departments, bookings } from '@/lib/mock-data';
 import { useAuthStore } from '@/lib/auth-store';
@@ -10,7 +10,7 @@ import { getDurationLabel } from '@/lib/utils';
 import { ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function BookRoomPage() {
+function BookRoomContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { currentUser } = useAuthStore();
@@ -298,5 +298,17 @@ export default function BookRoomPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function BookRoomPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <BookRoomContent />
+    </Suspense>
   );
 }

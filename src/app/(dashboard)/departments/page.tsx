@@ -3,7 +3,7 @@ import { departments, users, bookings } from '@/lib/mock-data';
 import { Users, Calendar } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Departments | MeetingHub',
+  title: 'Departments | Mone Meeting',
   description: 'View all departments and their booking statistics.',
 };
 

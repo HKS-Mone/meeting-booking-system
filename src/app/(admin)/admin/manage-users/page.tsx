@@ -145,69 +145,104 @@ export default function ManageUsersPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      {/* ── MOBILE: Card list ──────────────────────────────────────── */}
+      <div className="sm:hidden space-y-3">
+        {users.map((u) => (
+          <div key={u.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-600' : 'bg-blue-600'}`}>
+                {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-800 text-sm truncate">{u.name}</p>
+                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                {u.role === 'ADMIN' ? 'Admin' : 'User'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
+              <div><span className="block font-medium text-gray-700">Department</span>{u.department?.name ?? '—'}</div>
+              <div><span className="block font-medium text-gray-700">Joined</span>{formatDate(u.createdAt)}</div>
+            </div>
+            <div className="flex gap-2 pt-1 border-t border-gray-50">
+              <button id={`edit-user-${u.id}`} onClick={() => openEdit(u)}
+                className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
+                Edit
+              </button>
+              <button id={`delete-user-${u.id}`} onClick={() => setDeleteUser(u)}
+                className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── DESKTOP: Table ─────────────────────────────────────────── */}
+      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-800">All Users</h2>
           <span className="text-xs text-gray-400 flex items-center gap-1.5">
             <UserCog className="w-3.5 h-3.5" />
             {users.length} users total
           </span>
         </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              {['Name', 'Email', 'Role', 'Department', 'Joined', 'Actions'].map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                      {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </div>
-                    <span className="font-medium text-gray-800">{u.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {u.role === 'ADMIN' ? 'Admin' : 'User'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{u.department?.name ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
-                  {formatDate(u.createdAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      id={`edit-user-${u.id}`}
-                      onClick={() => openEdit(u)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      id={`delete-user-${u.id}`}
-                      onClick={() => setDeleteUser(u)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px] lg:min-w-0">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                {['Name', 'Email', 'Role', 'Department', 'Joined', 'Actions'].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-600' : 'bg-blue-600'}`}>
+                        {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
+                      <span className="font-medium text-gray-800">{u.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {u.role === 'ADMIN' ? 'Admin' : 'User'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{u.department?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
+                    {formatDate(u.createdAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button
+                        id={`edit-user-${u.id}`}
+                        onClick={() => openEdit(u)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        id={`delete-user-${u.id}`}
+                        onClick={() => setDeleteUser(u)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Add Modal */}

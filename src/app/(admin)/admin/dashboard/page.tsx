@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard | MeetingHub',
+  title: 'Admin Dashboard | Mone Meeting',
   description: 'Administrator overview of bookings, rooms, and departments.',
 };
 
@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Bookings This Month"
           value={thisMonthBookings.length}
