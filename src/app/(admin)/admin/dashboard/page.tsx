@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { bookings, rooms, departments } from '@/lib/mock-data';
 import StatsCard from '@/components/dashboard/StatsCard';
-import BookingApprovalTable from '@/components/admin/BookingApprovalTable';
+import BookingsTable from '@/components/admin/BookingsTable';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -15,11 +15,12 @@ export default function AdminDashboardPage() {
   const thisMonth = format(now, 'yyyy-MM');
   const thisMonthBookings = bookings.filter((b) => b.date.startsWith(thisMonth));
   const activeNow = bookings.filter((b) => {
-    if (b.status !== 'APPROVED') return false;
     const start = new Date(b.startTime);
     const end = new Date(b.endTime);
     return start <= now && end >= now;
   });
+
+  const upcoming = bookings.filter((b) => new Date(b.startTime) > now);
 
   // 10 most recent bookings
   const recent = [...bookings]
@@ -48,13 +49,13 @@ export default function AdminDashboardPage() {
           linkText="Manage rooms"
         />
         <StatsCard
-          title="Total Departments"
-          value={departments.length}
-          iconName="Building2"
+          title="Upcoming Meetings"
+          value={upcoming.length}
+          iconName="Calendar"
           iconColor="text-purple-600"
           iconBg="bg-purple-50"
-          linkHref="/admin/manage-departments"
-          linkText="Manage departments"
+          linkHref="/admin/calendar"
+          linkText="View calendar"
         />
         <StatsCard
           title="Active Meetings Now"
@@ -66,18 +67,18 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Recent Booking Requests */}
+      {/* Recent Bookings */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">Recent Booking Requests</h2>
+          <h2 className="text-base font-semibold text-gray-800">Recent Bookings</h2>
           <Link
-            href="/admin/booking-approval"
+            href="/admin/manage-bookings"
             className="text-xs font-medium text-blue-600 hover:text-blue-700"
           >
-            View all →
+            Manage all →
           </Link>
         </div>
-        <BookingApprovalTable initialBookings={recent} />
+        <BookingsTable bookings={recent} />
       </div>
     </div>
   );

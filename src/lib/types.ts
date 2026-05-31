@@ -2,7 +2,8 @@ export type Role = 'USER' | 'ADMIN';
 
 export type RoomStatus = 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'OUT_OF_SERVICE';
 
-export type BookingStatus = 'PENDING' | 'APPROVED' | 'CANCELLED' | 'REJECTED';
+/** Time-derived meeting status — computed from startTime/endTime vs. now. Never stored. */
+export type MeetingStatus = 'UPCOMING' | 'ONGOING' | 'COMPLETE';
 
 export interface Department {
   id: string;
@@ -44,6 +45,5 @@ export interface Booking {
   startTime: string; // ISO string
   endTime: string;   // ISO string
   date: string;      // ISO date string YYYY-MM-DD
-  status: BookingStatus;
   createdAt: string;
 }

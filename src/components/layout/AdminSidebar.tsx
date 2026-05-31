@@ -7,12 +7,12 @@ import {
   DoorOpen,
   Building2,
   Users,
-  CheckSquare,
   BarChart2,
   Settings,
   LogOut,
   Calendar,
   ShieldCheck,
+  ClipboardList,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -21,10 +21,11 @@ import { useRouter } from 'next/navigation';
 
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/manage-bookings', label: 'Manage Bookings', icon: ClipboardList },
   { href: '/admin/manage-rooms', label: 'Manage Rooms', icon: DoorOpen },
   { href: '/admin/manage-departments', label: 'Manage Departments', icon: Building2 },
   { href: '/admin/manage-users', label: 'Manage Users', icon: Users },
-  { href: '/admin/booking-approval', label: 'Booking Approval', icon: CheckSquare },
+  { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];

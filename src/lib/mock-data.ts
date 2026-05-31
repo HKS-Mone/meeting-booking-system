@@ -151,6 +151,7 @@ function dateOnly(n: number) {
 }
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
+// Status is no longer stored — it is derived at runtime via getMeetingStatus()
 export const bookings: Booking[] = [
   {
     id: 'bk-1001',
@@ -166,7 +167,6 @@ export const bookings: Booking[] = [
     startTime: today(9, 30),
     endTime: today(10, 30),
     date: dateOnly(0),
-    status: 'APPROVED',
     createdAt: daysFromNow(-3, 10),
   },
   {
@@ -183,7 +183,6 @@ export const bookings: Booking[] = [
     startTime: today(11, 0),
     endTime: today(12, 0),
     date: dateOnly(0),
-    status: 'APPROVED',
     createdAt: daysFromNow(-2, 9),
   },
   {
@@ -200,7 +199,6 @@ export const bookings: Booking[] = [
     startTime: today(13, 0),
     endTime: today(14, 0),
     date: dateOnly(0),
-    status: 'APPROVED',
     createdAt: daysFromNow(-1, 14),
   },
   {
@@ -217,7 +215,6 @@ export const bookings: Booking[] = [
     startTime: today(15, 0),
     endTime: today(16, 0),
     date: dateOnly(0),
-    status: 'PENDING',
     createdAt: daysFromNow(-1, 11),
   },
   {
@@ -234,7 +231,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(1, 10, 0),
     endTime: daysFromNow(1, 11, 30),
     date: dateOnly(1),
-    status: 'APPROVED',
     createdAt: daysFromNow(-2, 8),
   },
   {
@@ -251,7 +247,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(2, 14, 0),
     endTime: daysFromNow(2, 15, 0),
     date: dateOnly(2),
-    status: 'APPROVED',
     createdAt: daysFromNow(-1, 16),
   },
   {
@@ -268,7 +263,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(3, 9, 0),
     endTime: daysFromNow(3, 10, 0),
     date: dateOnly(3),
-    status: 'APPROVED',
     createdAt: daysFromNow(-4, 13),
   },
   {
@@ -285,7 +279,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(4, 11, 0),
     endTime: daysFromNow(4, 12, 30),
     date: dateOnly(4),
-    status: 'PENDING',
     createdAt: daysFromNow(-1, 9),
   },
   {
@@ -302,7 +295,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(5, 9, 0),
     endTime: daysFromNow(5, 12, 0),
     date: dateOnly(5),
-    status: 'CANCELLED',
     createdAt: daysFromNow(-5, 10),
   },
   {
@@ -319,7 +311,6 @@ export const bookings: Booking[] = [
     startTime: daysFromNow(6, 14, 0),
     endTime: daysFromNow(6, 15, 30),
     date: dateOnly(6),
-    status: 'REJECTED',
     createdAt: daysFromNow(-6, 14),
   },
 ];
@@ -341,7 +332,7 @@ export function getTodaysBookings() {
 export function getUpcomingBookings(limit = 3) {
   const now = new Date().toISOString();
   return bookings
-    .filter((b) => b.status === 'APPROVED' && b.startTime > now)
+    .filter((b) => b.startTime > now)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
     .slice(0, limit);
 }
@@ -353,7 +344,7 @@ export function getUserBookings(userId: string) {
 export function getBookingsForMonth(year: number, month: number) {
   return bookings.filter((b) => {
     const d = new Date(b.date);
-    return d.getFullYear() === year && d.getMonth() === month && b.status === 'APPROVED';
+    return d.getFullYear() === year && d.getMonth() === month;
   });
 }
 
@@ -363,7 +354,7 @@ export function getRoomAvailability(roomId: string, date: string) {
     const slotStart = new Date(`${date}T${String(h).padStart(2, '0')}:00:00`);
     const slotEnd = new Date(`${date}T${String(h + 1).padStart(2, '0')}:00:00`);
     const booked = bookings.some((b) => {
-      if (b.roomId !== roomId || b.date !== date || b.status === 'CANCELLED' || b.status === 'REJECTED') return false;
+      if (b.roomId !== roomId || b.date !== date) return false;
       const bStart = new Date(b.startTime);
       const bEnd = new Date(b.endTime);
       return bStart < slotEnd && bEnd > slotStart;

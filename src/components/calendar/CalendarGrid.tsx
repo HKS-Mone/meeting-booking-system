@@ -8,7 +8,9 @@ import {
 import { Booking } from '@/lib/types';
 import CalendarEventChip from './CalendarEventChip';
 import Modal from '@/components/ui/Modal';
-import { getEventColor, formatTime } from '@/lib/utils';
+import { getEventColor, formatTime, getMeetingStatus } from '@/lib/utils';
+import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
+
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -98,24 +100,30 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
         title="Booking Details"
         size="md"
       >
-        {selectedBooking && (
-          <div className="space-y-3 text-sm">
-            {[
-              ['Meeting', selectedBooking.purpose],
-              ['Room', selectedBooking.room?.name ?? '-'],
-              ['Department', selectedBooking.department?.name ?? '-'],
-              ['Date', format(new Date(selectedBooking.date), 'MMMM dd, yyyy')],
-              ['Time', `${formatTime(selectedBooking.startTime)} – ${formatTime(selectedBooking.endTime)}`],
-              ['Participants', String(selectedBooking.participants)],
-              ['Status', selectedBooking.status],
-            ].map(([label, value]) => (
-              <div key={label} className="flex gap-3">
-                <span className="w-28 shrink-0 text-gray-500">{label}</span>
-                <span className="font-medium text-gray-800">{value}</span>
+        {selectedBooking && (() => {
+          const status = getMeetingStatus(selectedBooking.startTime, selectedBooking.endTime);
+          return (
+            <div className="space-y-3 text-sm">
+              <div className="flex gap-3 items-center">
+                <span className="w-28 shrink-0 text-gray-500">Status</span>
+                <MeetingStatusBadge status={status} />
               </div>
-            ))}
-          </div>
-        )}
+              {[
+                ['Meeting', selectedBooking.purpose],
+                ['Room', selectedBooking.room?.name ?? '-'],
+                ['Department', selectedBooking.department?.name ?? '-'],
+                ['Date', format(new Date(selectedBooking.date), 'MMMM dd, yyyy')],
+                ['Time', `${formatTime(selectedBooking.startTime)} – ${formatTime(selectedBooking.endTime)}`],
+                ['Participants', String(selectedBooking.participants)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex gap-3">
+                  <span className="w-28 shrink-0 text-gray-500">{label}</span>
+                  <span className="font-medium text-gray-800">{value}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </Modal>
     </>
   );

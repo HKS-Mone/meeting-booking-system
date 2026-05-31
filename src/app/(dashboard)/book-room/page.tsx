@@ -62,7 +62,6 @@ export default function BookRoomPage() {
 
     const conflict = bookings.some((b) => {
       if (b.roomId !== form.roomId || b.date !== form.date) return false;
-      if (b.status === 'CANCELLED' || b.status === 'REJECTED') return false;
       const bStart = new Date(b.startTime);
       const bEnd = new Date(b.endTime);
       return bStart < slotEnd && bEnd > slotStart;

@@ -3,16 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  DoorOpen,
-  CalendarPlus,
   Calendar,
   ClipboardList,
-  Building2,
-  BarChart2,
-  Settings,
   LogOut,
-  Menu,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -20,14 +13,8 @@ import { useUIStore } from '@/lib/ui-store';
 import { useRouter } from 'next/navigation';
 
 const navLinks = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/meeting-rooms', label: 'Meeting Rooms', icon: DoorOpen },
-  { href: '/book-room', label: 'Book Room', icon: CalendarPlus },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/booking-history', label: 'Booking History', icon: ClipboardList },
-  { href: '/departments', label: 'Departments', icon: Building2 },
-  { href: '/reports', label: 'Reports', icon: BarChart2 },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/booking-history', label: 'My Bookings', icon: ClipboardList },
 ];
 
 export default function Sidebar() {
