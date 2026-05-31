@@ -22,8 +22,7 @@ import { useRouter } from 'next/navigation';
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/manage-bookings', label: 'Manage Bookings', icon: ClipboardList },
-  { href: '/admin/manage-rooms', label: 'Manage Rooms', icon: DoorOpen },
-  { href: '/admin/manage-departments', label: 'Manage Departments', icon: Building2 },
+  // { href: '/admin/manage-departments', label: 'Manage Departments', icon: Building2 },
   { href: '/admin/manage-users', label: 'Manage Users', icon: Users },
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
