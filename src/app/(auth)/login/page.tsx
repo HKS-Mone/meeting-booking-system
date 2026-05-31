@@ -217,13 +217,13 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials hint */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+          {/* <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
             <p className="text-xs font-semibold text-blue-700 mb-2">Demo Credentials</p>
             <div className="space-y-1 text-xs text-blue-600">
               <p><span className="font-medium">Admin:</span> admin@meetinghub.com / admin123</p>
               <p><span className="font-medium">User:</span> dilshan@meetinghub.com / user123</p>
             </div>
-          </div>
+          </div> */}
 
           <p className="text-center text-xs text-gray-400 mt-6">
             Don&apos;t have an account?{' '}

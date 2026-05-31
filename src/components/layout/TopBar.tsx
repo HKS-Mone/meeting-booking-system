@@ -56,7 +56,7 @@ export default function TopBar() {
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button
             onClick={toggleSidebar}
-            className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+            className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
           >
             <Menu className="w-5 h-5" />
           </button>
