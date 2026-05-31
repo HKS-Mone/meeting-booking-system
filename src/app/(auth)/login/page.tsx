@@ -115,7 +115,7 @@ export default function LoginPage() {
               <Calendar className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-gray-900 font-bold text-lg leading-none block">MeetingHub</span>
+              <span className="text-gray-900 font-bold text-lg leading-none block">Mone Meeting</span>
               <span className="text-gray-400 text-[10px]">Room Booking System</span>
             </div>
           </div>

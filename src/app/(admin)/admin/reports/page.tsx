@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Admin Reports | MeetingHub' };
+export const metadata: Metadata = { title: 'Admin Reports | Mone Meeting' };
 
 export default function AdminReportsPage() {
   return (

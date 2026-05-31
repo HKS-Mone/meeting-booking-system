@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/manage-bookings', label: 'Manage Bookings', icon: ClipboardList },
-  // { href: '/admin/manage-departments', label: 'Manage Departments', icon: Building2 },
+  // { href: '/admin/manage-departments', label: 'Manage Departments', icon: Building2 }, 
   { href: '/admin/manage-users', label: 'Manage Users', icon: Users },
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
@@ -69,7 +69,7 @@ export default function AdminSidebar() {
                 Admin Panel
               </span>
               <span className="text-blue-300 text-[10px] font-medium">
-                MeetingHub
+                Mone Meeting
               </span>
             </div>
           </div>

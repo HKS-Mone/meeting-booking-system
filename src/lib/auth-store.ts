@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'meetinghub-auth',
+      name: 'mone-meeting-auth',
     }
   )
 );

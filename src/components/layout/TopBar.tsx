@@ -31,7 +31,7 @@ function getPageTitle(pathname: string): string {
   for (const [key, value] of Object.entries(PAGE_TITLES)) {
     if (pathname.startsWith(key + '/')) return value;
   }
-  return 'MeetingHub';
+  return 'Mone Meeting';
 }
 
 export default function TopBar() {

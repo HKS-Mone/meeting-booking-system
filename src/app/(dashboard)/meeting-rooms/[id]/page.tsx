@@ -9,7 +9,7 @@ import { Users, MapPin, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const metadata: Metadata = {
-  title: 'Room Details | MeetingHub',
+  title: 'Room Details | Mone Meeting',
   description: 'View meeting room details and availability.',
 };
 

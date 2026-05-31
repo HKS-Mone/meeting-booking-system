@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'MeetingHub — Meeting Room Booking System',
+  title: 'Mone Meeting — Meeting Room Booking System',
   description:
     'A professional meeting room booking management system for enterprise teams.',
 };

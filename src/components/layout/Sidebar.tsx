@@ -56,7 +56,7 @@ export default function Sidebar() {
             </div>
             <div>
               <span className="text-white font-bold text-base leading-none block">
-                MeetingHub
+                Mone Meeting
               </span>
               <span className="text-blue-300 text-[10px] font-medium">
                 Room Booking System

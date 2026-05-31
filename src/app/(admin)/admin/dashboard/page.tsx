@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard | MeetingHub',
+  title: 'Admin Dashboard | Mone Meeting',
   description: 'Administrator overview of bookings, rooms, and departments.',
 };
 
