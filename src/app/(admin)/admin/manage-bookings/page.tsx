@@ -265,9 +265,53 @@ export default function ManageBookingsPage() {
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
+      {/* ── MOBILE: Card list ─────────────────────────────────────────── */}
+      <div className="sm:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center text-gray-400 text-sm">
+            No bookings found.
+          </div>
+        ) : filtered.map((b) => {
+          const status = getMeetingStatus(b.startTime, b.endTime);
+          return (
+            <div key={b.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-800 text-sm truncate">{b.purpose}</p>
+                  <p className="text-xs font-mono text-gray-400 mt-0.5">{b.bookingCode}</p>
+                </div>
+                <MeetingStatusBadge status={status} />
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
+                <div><span className="block font-medium text-gray-700">Room</span>{b.room?.name}</div>
+                <div><span className="block font-medium text-gray-700">Department</span>{b.department?.name}</div>
+                <div><span className="block font-medium text-gray-700">Date</span>{formatDate(b.date)}</div>
+                <div><span className="block font-medium text-gray-700">Time</span>{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
+              </div>
+              <div className="flex gap-2 pt-1 border-t border-gray-50">
+                <button
+                  id={`edit-booking-${b.id}`}
+                  onClick={() => openEdit(b)}
+                  className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  id={`delete-booking-${b.id}`}
+                  onClick={() => setDeleteBooking(b)}
+                  className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── DESKTOP: Table ────────────────────────────────────────────── */}
+      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800">
             All Bookings{' '}
             <span className="text-sm font-normal text-gray-400">({filtered.length})</span>
@@ -280,10 +324,7 @@ export default function ManageBookingsPage() {
               <tr className="bg-gray-50 border-b border-gray-100">
                 {['Booking ID', 'Room', 'Department', 'Date & Time', 'Purpose', 'Participants', 'Status', 'Actions'].map(
                   (h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
-                    >
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                       {h}
                     </th>
                   )
@@ -293,51 +334,31 @@ export default function ManageBookingsPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
-                    No bookings found.
-                  </td>
+                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">No bookings found.</td>
                 </tr>
               ) : (
                 filtered.map((b) => {
                   const status = getMeetingStatus(b.startTime, b.endTime);
                   return (
                     <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">
-                        {b.bookingCode}
-                      </td>
+                      <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
                       <td className="px-4 py-3 text-gray-700">{b.room?.name}</td>
                       <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
                         <div>{formatDate(b.date)}</div>
-                        <div className="text-gray-400">
-                          {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                        </div>
+                        <div className="text-gray-400">{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">
-                        {b.purpose}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 text-center">
-                        {b.participants}
-                      </td>
-                      <td className="px-4 py-3">
-                        <MeetingStatusBadge status={status} />
-                      </td>
+                      <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
+                      <td className="px-4 py-3 text-gray-600 text-center">{b.participants}</td>
+                      <td className="px-4 py-3"><MeetingStatusBadge status={status} /></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1.5">
-                          <button
-                            id={`edit-booking-${b.id}`}
-                            onClick={() => openEdit(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"
-                            title="Edit"
-                          >
+                          <button id={`edit-booking-${b.id}`} onClick={() => openEdit(b)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            id={`delete-booking-${b.id}`}
-                            onClick={() => setDeleteBooking(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors"
-                            title="Delete"
-                          >
+                          <button id={`delete-booking-${b.id}`} onClick={() => setDeleteBooking(b)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors" title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

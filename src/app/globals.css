@@ -48,4 +48,24 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
+
+  /* Safe-area padding for notched phones */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
+
+/* Modal slide-up animation (mobile bottom sheet) */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Hide scrollbar for calendar cells on mobile */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+

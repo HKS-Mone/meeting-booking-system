@@ -47,7 +47,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f1f5f9' }}>
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex min-h-0">
         {/* Left panel — illustration */}
         <div
           className="hidden md:flex flex-col items-center justify-center flex-1 p-10 relative"
@@ -108,7 +108,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right panel — form */}
-        <div className="flex-1 flex flex-col justify-center px-8 py-10 md:px-10" style={{ maxWidth: '460px' }}>
+        <div className="w-full md:flex-1 flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 md:px-10" style={{ maxWidth: '460px' }}>
           {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center">
