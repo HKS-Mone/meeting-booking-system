@@ -80,7 +80,7 @@ export default function AdminSidebar() {
           ${sidebarCollapsed ? 'items-center px-0 lg:items-stretch lg:px-5' : 'px-5'}
         `}>
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'md:justify-center md:w-full lg:justify-start lg:w-auto' : ''}`}>
               <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
