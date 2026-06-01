@@ -24,12 +24,12 @@ import { useRouter } from 'next/navigation';
 
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/manage-bookings', label: 'Manage Bookings', icon: ClipboardList },
   { href: '/admin/manage-employee', label: 'Manage Employee', icon: Users },
-  { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/admin/add-admin', label: 'Add Admin', icon: Building2 },
   { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
-  { href: '/admin/add-admin', label: 'Add Admin', icon: Building2 },
 ];
 
 export default function AdminSidebar() {
