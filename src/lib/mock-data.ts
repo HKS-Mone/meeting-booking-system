@@ -10,7 +10,7 @@ export const departments: Department[] = [
 
 // ─── Roles 
 export const roles: { value: Role; label: string }[] = [
-  { value: 'USER',  label: 'User'  },
+  { value: 'EMPLOYEE', label: 'Employee' },
   { value: 'ADMIN', label: 'Admin' },
 ];
 
@@ -29,7 +29,7 @@ export const users: User[] = [
     id: 'user-2',
     name: 'Dilshan Perera',
     email: 'dilshan@meetinghub.com',
-    role: 'USER',
+    role: 'EMPLOYEE',
     departmentId: 'dept-2',
     department: { id: 'dept-2', name: 'IT' },
     createdAt: '2024-01-15T00:00:00Z',
@@ -38,7 +38,7 @@ export const users: User[] = [
     id: 'user-3',
     name: 'Nimal Silva',
     email: 'nimal@meetinghub.com',
-    role: 'USER',
+    role: 'EMPLOYEE',
     departmentId: 'dept-1',
     department: { id: 'dept-1', name: 'HR' },
     createdAt: '2024-02-01T00:00:00Z',
@@ -47,7 +47,7 @@ export const users: User[] = [
     id: 'user-4',
     name: 'Kavinda Perera',
     email: 'kavinda@meetinghub.com',
-    role: 'USER',
+    role: 'EMPLOYEE',
     departmentId: 'dept-2',
     department: { id: 'dept-2', name: 'IT' },
     createdAt: '2024-02-10T00:00:00Z',
@@ -56,7 +56,7 @@ export const users: User[] = [
     id: 'user-5',
     name: 'Samuel Fernando',
     email: 'samuel@meetinghub.com',
-    role: 'USER',
+    role: 'EMPLOYEE',
     departmentId: 'dept-3',
     department: { id: 'dept-3', name: 'Finance' },
     createdAt: '2024-03-01T00:00:00Z',
@@ -65,7 +65,7 @@ export const users: User[] = [
     id: 'user-6',
     name: 'Dulihan Jayaweera',
     email: 'dulihan@meetinghub.com',
-    role: 'USER',
+    role: 'EMPLOYEE',
     departmentId: 'dept-4',
     department: { id: 'dept-4', name: 'Marketing' },
     createdAt: '2024-03-15T00:00:00Z',
