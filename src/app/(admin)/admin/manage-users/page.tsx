@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { users as initialUsers, departments } from '@/lib/mock-data';
+import { users as initialUsers, departments, roles } from '@/lib/mock-data';
 import { User, Role } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import { Pencil, Trash2, Plus, UserCog } from 'lucide-react';
@@ -110,8 +110,9 @@ export default function ManageUsersPage() {
             onChange={(e) => fieldVal({ role: e.target.value as Role })}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="USER">User</option>
-            <option value="ADMIN">Admin</option>
+            {roles.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
           </select>
         </div>
         <div>

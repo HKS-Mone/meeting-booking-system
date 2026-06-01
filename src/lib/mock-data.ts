@@ -1,11 +1,17 @@
-import { Department, User, Room, Booking } from './types';
+import { Department, User, Room, Booking, Role } from './types';
 
-// ─── Departments ─────────────────────────────────────────────────────────────
+// ─── Departments 
 export const departments: Department[] = [
   { id: 'dept-1', name: 'HR' },
   { id: 'dept-2', name: 'IT' },
   { id: 'dept-3', name: 'Finance' },
   { id: 'dept-4', name: 'Marketing' },
+];
+
+// ─── Roles 
+export const roles: { value: Role; label: string }[] = [
+  { value: 'USER',  label: 'User'  },
+  { value: 'ADMIN', label: 'Admin' },
 ];
 
 // ─── Users ───────────────────────────────────────────────────────────────────

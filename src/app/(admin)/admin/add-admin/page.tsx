@@ -219,7 +219,6 @@ export default function AddAdminPage() {
                                     locked
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-400">Role is fixed to ADMIN for this form</p>
                         </div>
                     </div>
 
