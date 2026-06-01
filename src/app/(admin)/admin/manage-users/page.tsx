@@ -15,7 +15,7 @@ import { formatDate } from '@/lib/utils';
 interface UserForm {
   name: string;
   email: string;
-  role: Role;
+  role: 'EMPLOYEE';
   departmentId: string;
   password: string;
 }
@@ -23,7 +23,7 @@ interface UserForm {
 const EMPTY_FORM: UserForm = {
   name: '',
   email: '',
-  role: 'USER',
+  role: 'EMPLOYEE',
   departmentId: departments[0]?.id ?? '',
   password: '',
 };
@@ -38,7 +38,7 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
   return { level: score as 0 | 1 | 2 | 3, label: ['Weak', 'Fair', 'Strong'][score - 1] ?? '' };
 }
 
-/* ── Helpers ──────────────────────────────────────────────────────────────────── */
+/* ── Helpers ──────────*/
 const initials = (name: string) =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || '??';
 
@@ -51,9 +51,6 @@ const selectStyle = {
 
 const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white hover:border-blue-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400';
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   Page
-══════════════════════════════════════════════════════════════════════════════ */
 export default function ManageUsersPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [addOpen, setAddOpen] = useState(false);
@@ -115,7 +112,7 @@ export default function ManageUsersPage() {
     setForm({
       name: '',
       email: '',
-      role: u.role,
+      role: 'EMPLOYEE',
       departmentId: u.departmentId ?? departments[0]?.id ?? '',
       password: '',
     });
@@ -170,30 +167,15 @@ export default function ManageUsersPage() {
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Access</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-          {/* Role — pill toggle */}
+          {/* Role — locked read-only */}
           <div className="space-y-1.5">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
               Role
             </label>
-            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-              {roles.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  id={`role-toggle-${r.value.toLowerCase()}`}
-                  onClick={() => fieldVal({ role: r.value })}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                    form.role === r.value
-                      ? r.value === 'ADMIN'
-                        ? 'bg-white text-purple-700 shadow-sm'
-                        : 'bg-white text-blue-700 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2.5 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
+              <span className="flex-1 text-sm font-semibold text-blue-700">Employee</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-300" />
             </div>
           </div>
 
@@ -255,9 +237,8 @@ export default function ManageUsersPage() {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                      i <= pwStrength.level ? strengthColors[pwStrength.level] : 'bg-gray-100'
-                    }`}
+                    className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= pwStrength.level ? strengthColors[pwStrength.level] : 'bg-gray-100'
+                      }`}
                   />
                 ))}
               </div>
@@ -307,7 +288,7 @@ export default function ManageUsersPage() {
                 <p className="text-xs text-gray-500 truncate">{u.email}</p>
               </div>
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                {u.role === 'ADMIN' ? 'Admin' : 'User'}
+                {u.role === 'ADMIN' ? 'Admin' : 'Employee'}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
@@ -363,10 +344,9 @@ export default function ManageUsersPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {u.role === 'ADMIN' ? 'Admin' : 'User'}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                      {u.role === 'ADMIN' ? 'Admin' : 'Employee'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-sm">{u.department?.name ?? '—'}</td>
