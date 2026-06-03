@@ -176,6 +176,7 @@ export default function AddAdminPage() {
                 onSubmit={handleSubmit}
                 id="add-admin-form"
                 noValidate
+                autoComplete="off"
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
             >
 
@@ -263,6 +264,7 @@ export default function AddAdminPage() {
                                 value={form.email}
                                 onChange={(e) => set({ email: e.target.value })}
                                 placeholder="admin@company.com"
+                                autoComplete="off"
                                 className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             />
@@ -283,6 +285,7 @@ export default function AddAdminPage() {
                                 value={form.password}
                                 onChange={(e) => set({ password: e.target.value })}
                                 placeholder="Min. 8 characters"
+                                autoComplete="new-password"
                                 className={`w-full px-4 py-2.5 pr-11 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             />

@@ -97,6 +97,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               value={form.email}
               onChange={(e) => onChange({ email: e.target.value })}
               placeholder="email@company.com"
+              autoComplete="off"
               className={inputCls}
             />
           </div>
@@ -159,6 +160,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               value={form.password}
               onChange={(e) => onChange({ password: e.target.value })}
               placeholder={isEdit ? 'Leave blank to keep unchanged' : 'Min. 8 characters'}
+              autoComplete="new-password"
               className={`${inputCls} pr-11`}
             />
             <button
@@ -276,7 +278,7 @@ export default function ManageUsersPage() {
           style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
         >
           <Plus className="w-4 h-4" />
-          Add User
+          Add Employee
         </button>
       </div>
 
