@@ -33,8 +33,7 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
   if (!pw) return { level: 0, label: '' };
   let score = 0;
   if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
   return { level: score as 0 | 1 | 2 | 3, label: ['Weak', 'Fair', 'Strong'][score - 1] ?? '' };
 }
 
