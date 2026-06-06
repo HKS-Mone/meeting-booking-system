@@ -1,18 +1,341 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Settings | Mone Meeting' };
+import { useState } from 'react';
+import { useAuthStore } from '@/lib/auth-store';
+import {
+    Settings,
+    Mail,
+    Lock,
+    Eye,
+    EyeOff,
+    CheckCircle2,
+    ShieldCheck,
+    ChevronRight,
+} from 'lucide-react';
+
+function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string } {
+    if (!pw) return { level: 0, label: '' };
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+    const labels = ['Weak', 'Fair', 'Strong'];
+    return { level: score as 0 | 1 | 2 | 3, label: labels[score - 1] ?? '' };
+}
 
 export default function SettingsPage() {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
-      <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <h2 className="text-xl font-semibold text-gray-800">Settings</h2>
-      <p className="text-gray-500 text-sm mt-2">Settings panel coming soon.</p>
-    </div>
-  );
+    const { currentUser } = useAuthStore();
+    const email = currentUser?.email ?? 'user@meetinghub.com';
+    const name = currentUser?.name ?? 'User';
+    const role = currentUser?.role ?? 'EMPLOYEE';
+    const roleLabel = role === 'ADMIN' ? 'Admin' : 'Employee';
+
+    const [form, setForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
+
+    const set = (f: Partial<typeof form>) => setForm((prev) => ({ ...prev, ...f }));
+
+    const validate = () => {
+        const e: Partial<Record<keyof typeof form, string>> = {};
+        if (!form.currentPassword) e.currentPassword = 'Current password is required';
+        if (!form.newPassword) e.newPassword = 'New password is required';
+        else if (form.newPassword.length < 8) e.newPassword = 'Must be at least 8 characters';
+        if (!form.confirmPassword) e.confirmPassword = 'Confirm password is required';
+        else if (form.confirmPassword !== form.newPassword) e.confirmPassword = 'Passwords do not match';
+        setErrors(e);
+        return Object.keys(e).length === 0;
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!validate()) return;
+        setSubmitted(true);
+    };
+
+    const handleReset = () => {
+        setForm({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+        });
+        setErrors({});
+        setSubmitted(false);
+    };
+
+    const pwStrength = getPasswordStrength(form.newPassword);
+    const strengthColors: Record<number, string> = {
+        0: '',
+        1: 'bg-red-400',
+        2: 'bg-yellow-400',
+        3: 'bg-emerald-400',
+    };
+    const strengthTextColors: Record<number, string> = {
+        0: '',
+        1: 'text-red-500',
+        2: 'text-yellow-500',
+        3: 'text-emerald-500',
+    };
+
+    /* ── Success Screen ─────────────────────────────────────────────────────── */
+    if (submitted) {
+        return (
+            <div className="space-y-5">
+                <p className="text-xs text-gray-500">Dashboard › Settings</p>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center space-y-5 max-w-sm mx-auto">
+                        {/* Animated checkmark */}
+                        <div
+                            className="mx-auto w-20 h-20 rounded-full flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 8px 32px rgba(37,99,235,0.35)' }}
+                        >
+                            <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={1.8} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">Password Updated!</h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Your account credentials have been updated successfully.
+                            </p>
+                        </div>
+                        {/* Summary card */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-left space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #1e3a8a, #2563eb)' }}
+                                >
+                                    {name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-800 text-sm">{name}</p>
+                                    <p className="text-xs text-gray-500">{email}</p>
+                                </div>
+                                <span className={`ml-auto px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                    role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                    {roleLabel}
+                                </span>
+                            </div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1.5 border-t border-gray-50 pt-3">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                Credentials secured
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-1">
+                            <button
+                                onClick={handleReset}
+                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Back to Settings
+                            </button>
+                            <a
+                                href="/calendar"
+                                className="flex-1 py-2.5 rounded-xl text-white text-sm font-medium text-center transition-colors flex items-center justify-center gap-1.5"
+                                style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' }}
+                            >
+                                Go to Calendar <ChevronRight className="w-3.5 h-3.5" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    /* ── Form ───────────────────────────────────────────────────────────────── */
+    return (
+        <div className="space-y-5">
+            {/* Breadcrumb */}
+            <p className="text-xs text-gray-500">Dashboard › Settings</p>
+
+            {/* Page header */}
+            <div className="flex items-center gap-3">
+                <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
+                >
+                    <Settings className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <h1 className="text-lg font-bold text-gray-800">Settings</h1>
+                </div>
+            </div>
+
+            {/* Form card */}
+            <form
+                onSubmit={handleSubmit}
+                id="settings-form"
+                noValidate
+                autoComplete="off"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+
+                <div className="p-6 space-y-6">
+                    {/* Row 1: Email + Current Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {/* Email (read-only) */}
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="settings-email"
+                                    type="email"
+                                    value={email}
+                                    readOnly
+                                    tabIndex={-1}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                                    locked
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Current Password */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="current-password" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                <Lock className="w-3.5 h-3.5 text-gray-400" />
+                                Current Password <span className="text-red-400">*</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="current-password"
+                                    type={showCurrentPassword ? 'text' : 'password'}
+                                    value={form.currentPassword}
+                                    autoComplete="new-password"
+                                    onChange={(e) => set({ currentPassword: e.target.value })}
+                                    placeholder="Enter current password"
+                                    className={`w-full px-4 py-2.5 pr-11 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                        errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                                />
+                                <button
+                                    type="button"
+                                    tabIndex={-1}
+                                    onClick={() => setShowCurrentPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                            {errors.currentPassword && <p className="text-xs text-red-500">{errors.currentPassword}</p>}
+                        </div>
+                    </div>
+
+                    {/* Row 2: New Password + Confirm Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {/* New Password */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="new-password" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                <Lock className="w-3.5 h-3.5 text-gray-400" />
+                                New Password <span className="text-red-400">*</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="new-password"
+                                    type={showNewPassword ? 'text' : 'password'}
+                                    value={form.newPassword}
+                                    onChange={(e) => set({ newPassword: e.target.value })}
+                                    placeholder="Min. 8 characters"
+                                    className={`w-full px-4 py-2.5 pr-11 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                        errors.newPassword ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                                />
+                                <button
+                                    type="button"
+                                    tabIndex={-1}
+                                    onClick={() => setShowNewPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+
+                            {/* Strength bar */}
+                            {form.newPassword.length > 0 && (
+                                <div className="space-y-1.5 pt-0.5">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3].map((i) => (
+                                            <div
+                                                key={i}
+                                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                                                    i <= pwStrength.level ? strengthColors[pwStrength.level] : 'bg-gray-100'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    {pwStrength.label && (
+                                        <p className={`text-xs font-medium ${strengthTextColors[pwStrength.level]}`}>
+                                            Password strength: {pwStrength.label}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                            {errors.newPassword && <p className="text-xs text-red-500">{errors.newPassword}</p>}
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="confirm-password" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                <Lock className="w-3.5 h-3.5 text-gray-400" />
+                                Confirm Password <span className="text-red-400">*</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="confirm-password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    value={form.confirmPassword}
+                                    onChange={(e) => set({ confirmPassword: e.target.value })}
+                                    placeholder="Re-enter new password"
+                                    className={`w-full px-4 py-2.5 pr-11 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                        errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                                />
+                                <button
+                                    type="button"
+                                    tabIndex={-1}
+                                    onClick={() => setShowConfirmPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                            {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 pt-1 border-t border-gray-50">
+                        <button
+                            type="button"
+                            id="cancel-settings-btn"
+                            onClick={handleReset}
+                            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                        >
+                            Clear Form
+                        </button>
+                        <button
+                            type="submit"
+                            id="submit-settings-btn"
+                            className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
+                            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 14px rgba(37,99,235,0.3)' }}
+                        >
+                            <ShieldCheck className="w-4 h-4" />
+                            Update Password
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    );
 }
