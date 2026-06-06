@@ -12,7 +12,7 @@ import { Booking } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import { formatDate, formatTime, getMeetingStatus } from '@/lib/utils';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CalendarDays, Clock, Building2, FileText, Users, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 // ─── Form state shape ─────────────────────────────────────────────────────────
@@ -129,110 +129,140 @@ export default function ManageBookingsPage() {
   // ─── Shared form JSX ──────────────────────────────────────────────────────
   const BookingFormFields = () => (
     <div className="space-y-4">
-      {/* Room */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Room</label>
-          <select
-            id="form-room"
-            value={form.roomId}
-            onChange={(e) => fieldVal({ roomId: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
+      {/* Department */}
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Department</label>
+        <div className="relative">
+          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <select
             id="form-department"
+            disabled
             value={form.departmentId}
             onChange={(e) => fieldVal({ departmentId: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 12px center',
+            }}
           >
             {departments.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+            locked
+          </span>
         </div>
       </div>
 
-      {/* Booked by */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Booked By</label>
-        <select
-          id="form-user"
-          value={form.userId}
-          onChange={(e) => fieldVal({ userId: e.target.value })}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>{u.name} ({u.department?.name})</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-        <input
-          id="form-purpose"
-          type="text"
-          value={form.purpose}
-          onChange={(e) => fieldVal({ purpose: e.target.value })}
-          placeholder="e.g. Quarterly Review"
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      {/* Participants + Date */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Participants</label>
+      {/* Booked By (locked) */}
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Booked By</label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
-            id="form-participants"
-            type="number"
-            min="1"
-            value={form.participants}
-            onChange={(e) => fieldVal({ participants: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            id="form-user"
+            type="text"
+            value={users.find((u) => u.id === form.userId)?.name ?? 'Admin User'}
+            disabled
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
           />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+            locked
+          </span>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+      </div>
+
+      {/* Date */}
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Date</label>
+        <div className="relative">
+          <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             id="form-date"
             type="date"
             value={form.date}
             onChange={(e) => fieldVal({ date: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
       </div>
 
-      {/* Start / End Time */}
+      {/* Start & End Time */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
-          <input
-            id="form-start-time"
-            type="time"
-            value={form.startTime}
-            onChange={(e) => fieldVal({ startTime: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-700">Start Time</label>
+          <div className="relative">
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <select
+              id="form-start-time"
+              value={form.startTime}
+              onChange={(e) => fieldVal({ startTime: e.target.value })}
+              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 12px center',
+              }}
+            >
+              {Array.from({ length: 24 }, (_, i) => {
+                const hh = String(i).padStart(2, '0');
+                return (
+                  <option key={`${hh}:00`} value={`${hh}:00`}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
-          <input
-            id="form-end-time"
-            type="time"
-            value={form.endTime}
-            onChange={(e) => fieldVal({ endTime: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-700">End Time</label>
+          <div className="relative">
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <select
+              id="form-end-time"
+              value={form.endTime}
+              onChange={(e) => fieldVal({ endTime: e.target.value })}
+              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 12px center',
+              }}
+            >
+              {Array.from({ length: 24 }, (_, i) => {
+                const hh = String(i).padStart(2, '0');
+                return (
+                  <option key={`${hh}:00`} value={`${hh}:00`}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <div className="relative">
+          <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
+          <textarea
+            id="form-purpose"
+            rows={3}
+            value={form.purpose}
+            onChange={(e) => fieldVal({ purpose: e.target.value })}
+            placeholder="Enter meeting description or agenda..."
+            maxLength={250}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
           />
+          <span className="absolute bottom-2.5 right-3 text-[10px] text-gray-400">
+            {form.purpose.length} / 250
+          </span>
         </div>
       </div>
     </div>
