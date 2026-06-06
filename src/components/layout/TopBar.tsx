@@ -63,14 +63,8 @@ export default function TopBar() {
           <h1 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{pageTitle}</h1>
         </div>
 
-        {/* Right: bell + user */}
+        {/* Right: user */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Bell */}
-          <button className="relative w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-
           {/* Divider — hidden on very small screens */}
           <div className="hidden xs:block h-8 w-px bg-gray-200" />
 
@@ -82,9 +76,6 @@ export default function TopBar() {
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-gray-800 leading-tight">
                 {currentUser?.name ?? 'Guest'}
-              </p>
-              <p className="text-xs text-gray-500 leading-tight">
-                {currentUser?.department?.name ?? currentUser?.role ?? ''}
               </p>
             </div>
           </div>
