@@ -8,7 +8,7 @@ import {
 import { Booking } from '@/lib/types';
 import CalendarEventChip from './CalendarEventChip';
 import { getEventColor, formatTime, getMeetingStatus, getDurationLabel } from '@/lib/utils';
-import { X, CalendarDays, Clock, MapPin, Users, Building2 } from 'lucide-react';
+import { X, CalendarDays, Clock, Building2 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 
 interface CalendarGridProps {
@@ -32,12 +32,6 @@ const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WEEKDAYS_LONG  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function statusLabel(b: Booking): string {
-  const s = getMeetingStatus(b.startTime, b.endTime);
-  if (s === 'ONGOING')  return 'Ongoing';
-  if (s === 'UPCOMING') return 'Upcoming';
-  return 'Completed';
-}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function CalendarGrid({ currentDate, bookings }: CalendarGridProps) {
@@ -118,7 +112,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                   {dayBookings.slice(0, 1).map((b, i) => (
                     <CalendarEventChip
                       key={b.id}
-                      title={b.purpose}
+                      title={b.department?.name ?? b.purpose}
                       colorClass={getEventColor(i)}
                       onClick={(e) => { e.stopPropagation(); setSelectedDay(day); }}
                     />
@@ -127,7 +121,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                     {dayBookings.slice(1, 3).map((b, i) => (
                       <CalendarEventChip
                         key={b.id}
-                        title={b.purpose}
+                        title={b.department?.name ?? b.purpose}
                         colorClass={getEventColor(i + 1)}
                         onClick={(e) => { e.stopPropagation(); setSelectedDay(day); }}
                       />
@@ -205,7 +199,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                   </div>
                   <h3 className="text-base font-semibold text-gray-700 mb-1">No meetings today</h3>
                   <p className="text-sm text-gray-400 max-w-xs">
-                    There are no meetings scheduled for this day. Enjoy the free time!
+                    There are no meetings scheduled for this day
                   </p>
                 </div>
               ) : (
@@ -243,19 +237,19 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                               className="flex-1 min-w-0 rounded-xl px-3.5 py-3"
                               style={{ backgroundColor: palette.bg }}
                             >
-                              {/* Title row */}
+                              {/* Title row — department name */}
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <h3
                                   className="font-semibold text-sm leading-tight truncate"
                                   style={{ color: palette.text }}
                                 >
-                                  {b.purpose}
+                                  {b.department?.name ?? '—'}
                                 </h3>
                                 <MeetingStatusBadge status={status} />
                               </div>
 
-                              {/* Meta grid */}
-                              <div className="space-y-1.5">
+                              {/* Meta */}
+                              <div className="space-y-2">
                                 {/* Time & duration */}
                                 <div className="flex items-center gap-1.5">
                                   <Clock
@@ -268,47 +262,26 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                                   </span>
                                 </div>
 
-                                {/* Room */}
-                                {b.room?.name && (
-                                  <div className="flex items-center gap-1.5">
-                                    <MapPin
-                                      className="w-3 h-3 shrink-0"
+                                {/* Description — textarea-style read-only block */}
+                                {b.purpose && (
+                                  <div className="mt-1">
+                                    <p
+                                      className="text-[10px] font-medium mb-1"
                                       style={{ color: palette.border }}
-                                    />
-                                    <span className="text-xs text-gray-600 truncate">
-                                      {b.room.name}
-                                      {b.room.floor && (
-                                        <span className="text-gray-400 ml-1">
-                                          · Floor {b.room.floor}
-                                        </span>
-                                      )}
-                                    </span>
+                                    >
+                                      Description
+                                    </p>
+                                    <div
+                                      className="w-full min-h-[56px] rounded-lg px-2.5 py-2 text-xs text-gray-600 leading-relaxed whitespace-pre-wrap break-words border"
+                                      style={{
+                                        backgroundColor: 'rgba(255,255,255,0.65)',
+                                        borderColor: palette.border + '55',
+                                      }}
+                                    >
+                                      {b.purpose}
+                                    </div>
                                   </div>
                                 )}
-
-                                {/* Department */}
-                                {b.department?.name && (
-                                  <div className="flex items-center gap-1.5">
-                                    <Building2
-                                      className="w-3 h-3 shrink-0"
-                                      style={{ color: palette.border }}
-                                    />
-                                    <span className="text-xs text-gray-600 truncate">
-                                      {b.department.name}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Participants */}
-                                <div className="flex items-center gap-1.5">
-                                  <Users
-                                    className="w-3 h-3 shrink-0"
-                                    style={{ color: palette.border }}
-                                  />
-                                  <span className="text-xs text-gray-600">
-                                    {b.participants} participant{b.participants !== 1 ? 's' : ''}
-                                  </span>
-                                </div>
                               </div>
                             </div>
                           </div>
