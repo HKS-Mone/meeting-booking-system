@@ -8,6 +8,7 @@ import {
   ClipboardList,
   LogOut,
   X,
+  Settings,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ import { useRouter } from 'next/navigation';
 const navLinks = [
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/booking-history', label: 'My Bookings', icon: ClipboardList },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -77,7 +79,7 @@ export default function Sidebar() {
                   Mone Meeting
                 </span>
                 <span className="text-blue-300 text-[10px] font-medium">
-                  Room Booking System
+                  Meeting Booking System
                 </span>
               </div>
             </div>

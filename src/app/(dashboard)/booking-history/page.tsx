@@ -6,7 +6,7 @@ import { MeetingStatus } from '@/lib/types';
 import { getMeetingStatus, formatDate, formatTime } from '@/lib/utils';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
-import { Search, Eye, Filter } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 type StatusFilter = '' | MeetingStatus;
 
@@ -20,29 +20,21 @@ const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
 const ITEMS_PER_PAGE = 10;
 
 export default function BookingHistoryPage() {
-  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<(typeof bookings)[0] | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
       const meetingStatus = getMeetingStatus(b.startTime, b.endTime);
-      const matchSearch =
-        !search ||
-        b.room?.name.toLowerCase().includes(search.toLowerCase()) ||
-        b.purpose.toLowerCase().includes(search.toLowerCase()) ||
-        b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
-        b.department?.name.toLowerCase().includes(search.toLowerCase());
       const matchStatus = !statusFilter || meetingStatus === statusFilter;
       const matchFrom = !fromDate || b.date >= fromDate;
       const matchTo = !toDate || b.date <= toDate;
-      return matchSearch && matchStatus && matchFrom && matchTo;
+      return matchStatus && matchFrom && matchTo;
     });
-  }, [search, statusFilter, fromDate, toDate]);
+  }, [statusFilter, fromDate, toDate]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -54,31 +46,8 @@ export default function BookingHistoryPage() {
 
   return (
     <div className="space-y-4">
-
-      {/* Search + filter toggle row */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            id="booking-search"
-            type="text"
-            placeholder="Search bookings…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        {/* Filter toggle on mobile */}
-        <button
-          onClick={() => setShowFilters((v) => !v)}
-          className={`sm:hidden flex items-center justify-center w-11 h-11 rounded-xl border text-sm font-medium transition-colors shrink-0 ${showFilters ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
-        >
-          <Filter className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Extra filters — collapsible on mobile, always visible on sm+ */}
-      <div className={`gap-3 ${showFilters ? 'flex' : 'hidden'} flex-col sm:flex sm:flex-row`}>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <select
           id="booking-status-filter"
           value={statusFilter}
@@ -135,10 +104,6 @@ export default function BookingHistoryPage() {
               {/* Details grid */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
                 <div>
-                  <span className="block font-medium text-gray-700">Room</span>
-                  {b.room?.name}
-                </div>
-                <div>
                   <span className="block font-medium text-gray-700">Department</span>
                   {b.department?.name}
                 </div>
@@ -181,7 +146,7 @@ export default function BookingHistoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Booking ID', 'Room', 'Department', 'Date', 'Time', 'Purpose', 'Status', ''].map((h) => (
+                {['Department', 'Date', 'Time', 'Description', 'Status', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     {h}
                   </th>
@@ -191,7 +156,7 @@ export default function BookingHistoryPage() {
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400 text-sm">
                     No bookings found.
                   </td>
                 </tr>
@@ -199,8 +164,6 @@ export default function BookingHistoryPage() {
                 const status = getMeetingStatus(b.startTime, b.endTime);
                 return (
                   <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
-                    <td className="px-4 py-3 text-gray-700">{b.room?.name}</td>
                     <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.date)}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatTime(b.startTime)} – {formatTime(b.endTime)}</td>
@@ -263,13 +226,10 @@ export default function BookingHistoryPage() {
                 <MeetingStatusBadge status={status} />
               </div>
               {[
-                ['Booking ID', selected.bookingCode],
-                ['Room', selected.room?.name ?? '-'],
                 ['Department', selected.department?.name ?? '-'],
-                ['Purpose', selected.purpose],
+                ['Description', selected.purpose],
                 ['Date', formatDate(selected.date)],
                 ['Time', `${formatTime(selected.startTime)} – ${formatTime(selected.endTime)}`],
-                ['Participants', String(selected.participants)],
               ].map(([label, value]) => (
                 <div key={label} className="flex gap-3">
                   <span className="w-24 shrink-0 text-gray-500">{label}</span>

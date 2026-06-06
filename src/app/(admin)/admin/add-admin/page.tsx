@@ -194,7 +194,7 @@ export default function AddAdminPage() {
                                 type="text"
                                 value={form.name}
                                 onChange={(e) => set({ name: e.target.value })}
-                                placeholder="e.g. Jane Smith"
+                                placeholder="Kasun Sameera"
                                 className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             />
@@ -322,15 +322,7 @@ export default function AddAdminPage() {
                         )}
                         {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                     </div>
-
-                    {/* Info notice */}
-                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50 border border-blue-100">
-                        <ShieldCheck className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-blue-700 leading-relaxed">
-                            This account will be granted <span className="font-semibold">full admin privileges</span> — including user management, booking oversight, and system settings. Share credentials securely.
-                        </p>
-                    </div>
-
+                    
                     {/* Actions */}
                     <div className="flex flex-col-reverse sm:flex-row gap-3 pt-1 border-t border-gray-50">
                         <button
