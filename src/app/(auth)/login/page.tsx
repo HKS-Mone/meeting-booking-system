@@ -95,16 +95,6 @@ export default function LoginPage() {
               Streamline your workspace scheduling with ease
             </p>
           </div>
-
-          {/* Stats */}
-          <div className="flex gap-8 mt-8 relative z-10">
-            {[['20+', 'Rooms'], ['4', 'Departments'], ['100+', 'Bookings']].map(([val, label]) => (
-              <div key={label} className="text-center">
-                <p className="text-white text-xl font-bold">{val}</p>
-                <p className="text-blue-200 text-xs">{label}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Right panel — form */}
@@ -116,7 +106,7 @@ export default function LoginPage() {
             </div>
             <div>
               <span className="text-gray-900 font-bold text-lg leading-none block">Mone Meeting</span>
-              <span className="text-gray-400 text-[10px]">Room Booking System</span>
+              <span className="text-gray-400 text-[10px]">Mone Booking System</span>
             </div>
           </div>
 
@@ -187,12 +177,6 @@ export default function LoginPage() {
                 />
                 Remember me
               </label>
-              <button
-                type="button"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
-              >
-                Forgot Password?
-              </button>
             </div>
 
             {/* Submit */}
