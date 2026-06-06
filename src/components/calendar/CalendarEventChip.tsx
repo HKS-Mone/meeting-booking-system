@@ -3,7 +3,7 @@
 interface CalendarEventChipProps {
   title: string;
   colorClass: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export default function CalendarEventChip({ title, colorClass, onClick }: CalendarEventChipProps) {

@@ -7,7 +7,7 @@ import { formatMonthYear } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, subMonths } from 'date-fns';
 
-export default function CalendarPage() {
+export default function AdminCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const monthBookings = getBookingsForMonth(
@@ -18,10 +18,10 @@ export default function CalendarPage() {
   return (
     <div className="space-y-5">
       {/* Controls row */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            id="calendar-prev"
+            id="admin-calendar-prev"
             onClick={() => setCurrentDate((d) => subMonths(d, 1))}
             className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
@@ -31,7 +31,7 @@ export default function CalendarPage() {
             {formatMonthYear(currentDate)}
           </h2>
           <button
-            id="calendar-next"
+            id="admin-calendar-next"
             onClick={() => setCurrentDate((d) => addMonths(d, 1))}
             className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
@@ -39,8 +39,8 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        {/* Status legend */}
-        <div className="flex items-center gap-4 text-xs text-gray-500 bg-white border border-gray-200 rounded-xl px-4 py-2">
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
             Upcoming

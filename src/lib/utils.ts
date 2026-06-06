@@ -1,8 +1,7 @@
 import { format, intervalToDuration } from 'date-fns';
-import { BookingStatus, RoomStatus } from './types';
+import { MeetingStatus, RoomStatus } from './types';
 
 // ─── Class merge helper ───────────────────────────────────────────────────────
-// Simple implementation without clsx since we haven't installed it
 export function cn(...classes: (string | undefined | null | false | 0)[]) {
   return classes.filter(Boolean).join(' ');
 }
@@ -34,22 +33,7 @@ export function getDurationLabel(startIso: string, endIso: string): string {
   return parts.join(' ') || '0m';
 }
 
-// ─── Status badge colours ─────────────────────────────────────────────────────
-export function getBookingStatusStyle(status: BookingStatus): string {
-  switch (status) {
-    case 'APPROVED':
-      return 'bg-green-100 text-green-700';
-    case 'PENDING':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'CANCELLED':
-      return 'bg-gray-100 text-gray-600';
-    case 'REJECTED':
-      return 'bg-red-100 text-red-700';
-    default:
-      return 'bg-gray-100 text-gray-600';
-  }
-}
-
+// ─── Room status badge colours ────────────────────────────────────────────────
 export function getRoomStatusStyle(status: RoomStatus): string {
   switch (status) {
     case 'AVAILABLE':
@@ -65,23 +49,23 @@ export function getRoomStatusStyle(status: RoomStatus): string {
   }
 }
 
-// ─── Meeting time status ──────────────────────────────────────────────────────
-export function getMeetingTimeStatus(startIso: string, endIso: string): 'ongoing' | 'upcoming' | 'completed' {
+// ─── Meeting time status (time-derived, never stored) ─────────────────────────
+export function getMeetingStatus(startIso: string, endIso: string): MeetingStatus {
   const now = new Date();
   const start = new Date(startIso);
   const end = new Date(endIso);
-  if (now >= start && now <= end) return 'ongoing';
-  if (now < start) return 'upcoming';
-  return 'completed';
+  if (now >= start && now <= end) return 'ONGOING';
+  if (now < start) return 'UPCOMING';
+  return 'COMPLETE';
 }
 
-export function getMeetingTimeStatusStyle(status: 'ongoing' | 'upcoming' | 'completed'): string {
+export function getMeetingStatusStyle(status: MeetingStatus): string {
   switch (status) {
-    case 'ongoing':
+    case 'ONGOING':
       return 'bg-green-100 text-green-700';
-    case 'upcoming':
+    case 'UPCOMING':
       return 'bg-blue-100 text-blue-700';
-    case 'completed':
+    case 'COMPLETE':
       return 'bg-gray-100 text-gray-600';
   }
 }

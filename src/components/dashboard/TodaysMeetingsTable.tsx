@@ -1,8 +1,8 @@
 'use client';
 
 import { Booking } from '@/lib/types';
-import { formatTime, getMeetingTimeStatus } from '@/lib/utils';
-import { MeetingTimeBadge } from '@/components/ui/StatusBadge';
+import { formatTime, getMeetingStatus as getMeetingTimeStatus } from '@/lib/utils';
+import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 
 interface TodaysMeetingsTableProps {
   bookings: Booking[];
@@ -44,7 +44,7 @@ export default function TodaysMeetingsTable({ bookings }: TodaysMeetingsTablePro
                 <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                 <td className="px-4 py-3 text-gray-800">{b.purpose}</td>
                 <td className="px-4 py-3">
-                  <MeetingTimeBadge status={timeStatus} />
+                  <MeetingStatusBadge status={timeStatus} />
                 </td>
               </tr>
             );
