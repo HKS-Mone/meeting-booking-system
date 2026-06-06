@@ -135,10 +135,6 @@ export default function BookingHistoryPage() {
               {/* Details grid */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
                 <div>
-                  <span className="block font-medium text-gray-700">Room</span>
-                  {b.room?.name}
-                </div>
-                <div>
                   <span className="block font-medium text-gray-700">Department</span>
                   {b.department?.name}
                 </div>
@@ -181,7 +177,7 @@ export default function BookingHistoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Booking ID', 'Room', 'Department', 'Date', 'Time', 'Purpose', 'Status', ''].map((h) => (
+                {['Booking ID', 'Department', 'Date', 'Time', 'Purpose', 'Status', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     {h}
                   </th>
@@ -191,7 +187,7 @@ export default function BookingHistoryPage() {
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400 text-sm">
                     No bookings found.
                   </td>
                 </tr>
@@ -200,7 +196,6 @@ export default function BookingHistoryPage() {
                 return (
                   <tr key={b.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
-                    <td className="px-4 py-3 text-gray-700">{b.room?.name}</td>
                     <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.date)}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatTime(b.startTime)} – {formatTime(b.endTime)}</td>
@@ -264,12 +259,10 @@ export default function BookingHistoryPage() {
               </div>
               {[
                 ['Booking ID', selected.bookingCode],
-                ['Room', selected.room?.name ?? '-'],
                 ['Department', selected.department?.name ?? '-'],
                 ['Purpose', selected.purpose],
                 ['Date', formatDate(selected.date)],
                 ['Time', `${formatTime(selected.startTime)} – ${formatTime(selected.endTime)}`],
-                ['Participants', String(selected.participants)],
               ].map(([label, value]) => (
                 <div key={label} className="flex gap-3">
                   <span className="w-24 shrink-0 text-gray-500">{label}</span>
