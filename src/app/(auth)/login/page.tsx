@@ -41,7 +41,7 @@ export default function LoginPage() {
     if (user?.role === 'ADMIN') {
       router.push('/admin/dashboard');
     } else {
-      router.push('/dashboard');
+      router.push('/calendar');
     }
   };
 
