@@ -18,7 +18,7 @@ export default function BookingsTable({ bookings, showAll = false }: BookingsTab
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-100">
-            {['Booking ID', 'Booked By', 'Department', 'Date & Time', 'Purpose', 'Status'].map(
+            {['Booking ID', 'Booked By', 'Department', 'Date & Time', 'Description', 'Status'].map(
               (h) => (
                 <th
                   key={h}
