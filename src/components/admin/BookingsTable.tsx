@@ -18,7 +18,7 @@ export default function BookingsTable({ bookings, showAll = false }: BookingsTab
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-100">
-            {['Booking ID', 'Room', 'Booked By', 'Department', 'Date & Time', 'Purpose', 'Participants', 'Status'].map(
+            {['Booking ID', 'Booked By', 'Department', 'Date & Time', 'Purpose', 'Status'].map(
               (h) => (
                 <th
                   key={h}
@@ -45,7 +45,6 @@ export default function BookingsTable({ bookings, showAll = false }: BookingsTab
                   <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">
                     {b.bookingCode}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{b.room?.name}</td>
                   <td className="px-4 py-3 text-gray-700">{b.user?.name}</td>
                   <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
@@ -56,9 +55,6 @@ export default function BookingsTable({ bookings, showAll = false }: BookingsTab
                   </td>
                   <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">
                     {b.purpose}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 text-center">
-                    {b.participants}
                   </td>
                   <td className="px-4 py-3">
                     <MeetingStatusBadge status={meetingStatus} />

@@ -29,54 +29,9 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Bookings This Month"
-          value={thisMonthBookings.length}
-          iconName="Calendar"
-          iconColor="text-blue-600"
-          iconBg="bg-blue-50"
-          trend="This month"
-        />
-        <StatsCard
-          title="Total Rooms"
-          value={rooms.length}
-          iconName="DoorOpen"
-          iconColor="text-green-600"
-          iconBg="bg-green-50"
-          linkHref="/admin/manage-rooms"
-          linkText="Manage rooms"
-        />
-        <StatsCard
-          title="Upcoming Meetings"
-          value={upcoming.length}
-          iconName="Calendar"
-          iconColor="text-purple-600"
-          iconBg="bg-purple-50"
-          linkHref="/admin/calendar"
-          linkText="View calendar"
-        />
-        <StatsCard
-          title="Active Meetings Now"
-          value={activeNow.length}
-          iconName="Video"
-          iconColor="text-orange-600"
-          iconBg="bg-orange-50"
-          trend="Right now"
-        />
-      </div>
-
-      {/* Recent Bookings */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">Recent Bookings</h2>
-          <Link
-            href="/admin/manage-bookings"
-            className="text-xs font-medium text-blue-600 hover:text-blue-700"
-          >
-            Manage all →
-          </Link>
+          <h2 className="text-base font-semibold align-center text-gray-800">Recent Bookings</h2>
         </div>
         <BookingsTable bookings={recent} />
       </div>
