@@ -8,6 +8,7 @@ import {
   ClipboardList,
   LogOut,
   X,
+  Settings,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ import { useRouter } from 'next/navigation';
 const navLinks = [
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/booking-history', label: 'My Bookings', icon: ClipboardList },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
