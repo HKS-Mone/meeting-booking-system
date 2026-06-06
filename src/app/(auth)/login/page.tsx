@@ -38,7 +38,7 @@ export default function LoginPage() {
     }
 
     const user = useAuthStore.getState().currentUser;
-    if (user?.role === 'ADMIN') {
+    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
       router.push('/admin/dashboard');
     } else {
       router.push('/calendar');

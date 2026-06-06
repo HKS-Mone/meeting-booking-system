@@ -15,6 +15,7 @@ export const departments: Department[] = [
 export const roles: { value: Role; label: string }[] = [
   { value: 'EMPLOYEE', label: 'Employee' },
   { value: 'ADMIN', label: 'Admin' },
+  { value: 'SUPER_ADMIN', label: 'Super Admin' },
 ];
 
 // ─── Users ───────────────────────────────────────────────────────────────────
