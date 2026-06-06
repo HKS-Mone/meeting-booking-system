@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   bookings as initialBookings,
   rooms,
@@ -39,6 +40,7 @@ const EMPTY_FORM: BookingForm = {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ManageBookingsPage() {
+  const router = useRouter();
   const [bookingList, setBookingList] = useState<Booking[]>(initialBookings);
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
@@ -244,7 +246,7 @@ export default function ManageBookingsPage() {
         <p className="text-xs text-gray-500">Admin Panel › Manage Bookings</p>
         <button
           id="add-booking-btn"
-          onClick={() => { setForm(EMPTY_FORM); setAddOpen(true); }}
+          onClick={() => router.push('/admin/manage-bookings/add-booking')}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
