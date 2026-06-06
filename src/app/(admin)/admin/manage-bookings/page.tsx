@@ -285,7 +285,6 @@ export default function ManageBookingsPage() {
                 <MeetingStatusBadge status={status} />
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
-                <div><span className="block font-medium text-gray-700">Room</span>{b.room?.name}</div>
                 <div><span className="block font-medium text-gray-700">Department</span>{b.department?.name}</div>
                 <div><span className="block font-medium text-gray-700">Date</span>{formatDate(b.date)}</div>
                 <div><span className="block font-medium text-gray-700">Time</span>{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
@@ -324,7 +323,7 @@ export default function ManageBookingsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Booking ID', 'Room', 'Department', 'Date & Time', 'Purpose', 'Participants', 'Status', 'Actions'].map(
+                {['Booking ID', 'Department', 'Date & Time', 'Purpose', 'Status', 'Actions'].map(
                   (h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                       {h}
@@ -344,14 +343,12 @@ export default function ManageBookingsPage() {
                   return (
                     <tr key={b.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
-                      <td className="px-4 py-3 text-gray-700">{b.room?.name}</td>
                       <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
                         <div>{formatDate(b.date)}</div>
                         <div className="text-gray-400">{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
                       </td>
                       <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
-                      <td className="px-4 py-3 text-gray-600 text-center">{b.participants}</td>
                       <td className="px-4 py-3"><MeetingStatusBadge status={status} /></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1.5">
