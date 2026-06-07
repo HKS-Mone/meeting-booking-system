@@ -30,6 +30,20 @@ async function postAuth<TBody>(url: string, body: TBody): Promise<AuthResult> {
 }
 
 export const authService = {
+  async getSession() {
+    const response = await fetch('/api/auth/login', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const data = (await response.json()) as AuthResult;
+    if (!response.ok) {
+      return { success: false, error: data.error ?? 'Invalid session.' };
+    }
+
+    return data;
+  },
+
   login(credentials: LoginCredentials) {
     return postAuth('/api/auth/login', credentials);
   },

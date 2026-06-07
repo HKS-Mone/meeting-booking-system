@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../hook/useAuth';
 import { Eye, EyeOff, Mail, Lock, Calendar } from 'lucide-react';
@@ -11,8 +11,20 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { currentUser, login, isLoading, isCheckingSession } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!currentUser || isCheckingSession) {
+      return;
+    }
+
+    if (currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN') {
+      router.replace('/admin/dashboard');
+    } else {
+      router.replace('/calendar');
+    }
+  }, [currentUser, isCheckingSession, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,10 +188,10 @@ export default function LoginPage() {
             <button
               type="submit"
               id="login-btn"
-              disabled={isLoading}
+              disabled={isLoading || isCheckingSession}
               className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isLoading || isCheckingSession ? (
                 <>
                   <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>

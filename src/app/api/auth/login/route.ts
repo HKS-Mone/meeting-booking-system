@@ -1,5 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { authCookie, serverAuthService } from '@/services/auth-server.service';
+
+export async function GET(request: NextRequest) {
+  const token = request.cookies.get(authCookie.name)?.value;
+  const result = await serverAuthService.authenticateToken(token);
+
+  if (!result.success) {
+    return NextResponse.json({ success: false, error: result.error ?? 'Invalid session.' }, { status: 401 });
+  }
+
+  return NextResponse.json({ success: true, user: result.user });
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

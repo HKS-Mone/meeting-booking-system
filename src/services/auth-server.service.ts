@@ -6,6 +6,13 @@ import type { User } from '@/lib/types';
 import type { AuthResult, LoginCredentials } from '@/services/auth.service';
 
 type UserWithDepartment = Awaited<ReturnType<typeof AuthRepository.validateUser>>;
+type JwtPayload = {
+  sub?: string;
+  email?: string;
+  role?: string;
+  iat?: number;
+  exp?: number;
+};
 
 const JWT_COOKIE_NAME = 'auth_token_mone';
 const JWT_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 7;
@@ -24,6 +31,11 @@ function base64Url(input: Buffer | string) {
     .replace(/\//g, '_');
 }
 
+function decodeBase64Url(input: string) {
+  const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(base64, 'base64').toString('utf8');
+}
+
 function signJwt(payload: Record<string, unknown>) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
@@ -39,6 +51,37 @@ function signJwt(payload: Record<string, unknown>) {
   const signature = createHmac('sha256', getJwtSecret()).update(data).digest();
 
   return `${data}.${base64Url(signature)}`;
+}
+
+function verifyJwt(token?: string): JwtPayload | null {
+  if (!token) {
+    return null;
+  }
+
+  const [encodedHeader, encodedBody, encodedSignature] = token.split('.');
+  if (!encodedHeader || !encodedBody || !encodedSignature) {
+    return null;
+  }
+
+  const data = `${encodedHeader}.${encodedBody}`;
+  const expectedSignature = base64Url(createHmac('sha256', getJwtSecret()).update(data).digest());
+  const expected = Buffer.from(expectedSignature);
+  const actual = Buffer.from(encodedSignature);
+
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(encodedBody)) as JwtPayload;
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 function verifyPassword(password: string, storedPassword?: string | null) {
@@ -102,5 +145,21 @@ export const serverAuthService = {
 
     const token = createToken(user);
     return { success: true, user: toSafeUser(user), token };
+  },
+
+  async authenticateToken(token?: string): Promise<AuthResult> {
+    const payload = verifyJwt(token);
+    const userId = Number(payload?.sub);
+
+    if (!payload || !Number.isInteger(userId)) {
+      return { success: false, error: 'Invalid session.' };
+    }
+
+    const user = await AuthRepository.findActiveUserById(userId);
+    if (!user) {
+      return { success: false, error: 'Invalid session.' };
+    }
+
+    return { success: true, user: toSafeUser(user) };
   },
 };
