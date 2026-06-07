@@ -26,11 +26,9 @@ import {
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 interface BookingForm {
-  roomId: string;
   departmentId: string;
   userId: string;
-  purpose: string;
-  participants: string;
+  description: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -39,11 +37,9 @@ interface BookingForm {
 const today = format(new Date(), 'yyyy-MM-dd');
 
 const EMPTY_FORM: BookingForm = {
-  roomId: rooms[0]?.id ?? '',
   departmentId: departments[0]?.id ?? '',
   userId: users[0]?.id ?? '',
-  purpose: '',
-  participants: '1',
+  description: '',
   date: today,
   startTime: '09:00',
   endTime: '10:00',
@@ -106,7 +102,7 @@ export default function AddBookingPage() {
   // ─── Submit ─────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.purpose.trim()) return;
+    if (!form.description.trim()) return;
     // In a real app: persist the booking here
     router.push('/admin/manage-bookings');
   };
@@ -222,17 +218,36 @@ export default function AddBookingPage() {
               </div>
             </div>
 
-            {/* Department */}
+            {/* Title */}
             <div className="space-y-1.5">
-              <label htmlFor="ab-department" className="block text-sm font-medium text-gray-700">
-                Department
+              <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
+                Title
               </label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  id="ab-description"
+                  type="text"
+                  value={form.description}
+                  onChange={(e) => fieldVal({ description: e.target.value })}
+                  placeholder="Enter meeting title..."
+                  maxLength={250}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Booked By */}
+            <div className="space-y-1.5">
+              <label htmlFor="ab-bookedby" className="block text-sm font-medium text-gray-700">
+                Booked By
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <select
-                  id="ab-department"
-                  value={form.departmentId}
-                  onChange={(e) => fieldVal({ departmentId: e.target.value })}
+                  id="ab-bookedby"
+                  value={form.userId}
+                  onChange={(e) => fieldVal({ userId: e.target.value })}
                   className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -240,29 +255,10 @@ export default function AddBookingPage() {
                     backgroundPosition: 'right 12px center',
                   }}
                 >
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
                   ))}
                 </select>
-              </div>
-            </div>
-
-            {/* Title / Purpose */}
-            <div className="space-y-1.5">
-              <label htmlFor="ab-purpose" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  id="ab-purpose"
-                  type="text"
-                  value={form.purpose}
-                  onChange={(e) => fieldVal({ purpose: e.target.value })}
-                  placeholder="Enter meeting title..."
-                  maxLength={250}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
               </div>
             </div>
 
@@ -327,25 +323,6 @@ export default function AddBookingPage() {
                 >
                   Today
                 </button>
-
-                {/* View switcher */}
-                <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-                  {(['Day', 'Week', 'Month'] as CalView[]).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      id={`cal-view-${v.toLowerCase()}-btn`}
-                      onClick={() => setCalView(v)}
-                      className={`px-3 py-1 text-xs font-medium transition-colors ${calView === v
-                        ? 'text-white'
-                        : 'text-gray-500 hover:bg-gray-50'
-                        }`}
-                      style={calView === v ? { background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' } : {}}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
