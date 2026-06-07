@@ -32,6 +32,13 @@ interface BookingForm {
 
 const today = format(new Date(), 'yyyy-MM-dd');
 
+function formatHourLabel(i: number): string {
+  if (i === 0) return '05:00 AM';
+  if (i < 12) return `${i}:00 AM`;
+  if (i === 12) return '12:00 PM';
+  return `${i - 12}:00 PM`;
+}
+
 const EMPTY_FORM: BookingForm = {
   departmentId: departments[0]?.id ?? '',
   userId: users[0]?.id ?? '',
@@ -176,7 +183,7 @@ export default function AddBookingPage() {
                       const hh = String(i).padStart(2, '0');
                       return (
                         <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                          {formatHourLabel(i)}
                         </option>
                       );
                     })}
@@ -205,31 +212,12 @@ export default function AddBookingPage() {
                       const hh = String(i).padStart(2, '0');
                       return (
                         <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                          {formatHourLabel(i)}
                         </option>
                       );
                     })}
                   </select>
                 </div>
-              </div>
-            </div>
-
-            {/* Title */}
-            <div className="space-y-1.5">
-              <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  id="ab-description"
-                  type="text"
-                  value={form.description}
-                  onChange={(e) => fieldVal({ description: e.target.value })}
-                  placeholder="Enter meeting title..."
-                  maxLength={250}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
               </div>
             </div>
 
@@ -257,6 +245,26 @@ export default function AddBookingPage() {
                 </select>
               </div>
             </div>
+            
+            {/* Title */}
+            <div className="space-y-1.5">
+              <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
+                Title
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  id="ab-description"
+                  type="text"
+                  value={form.description}
+                  onChange={(e) => fieldVal({ description: e.target.value })}
+                  placeholder="Enter meeting title..."
+                  maxLength={250}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">
