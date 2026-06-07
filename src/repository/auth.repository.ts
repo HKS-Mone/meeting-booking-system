@@ -11,4 +11,16 @@ export class AuthRepository {
       },
     });
   }
+
+  static async findActiveUserById(id: number) {
+    return prisma.user.findFirst({
+      where: {
+        id,
+        isActive: true,
+      },
+      include: {
+        department: true,
+      },
+    });
+  }
 }
