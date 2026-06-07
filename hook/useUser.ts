@@ -2,11 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import type { Department, Role, User } from '@/lib/types';
-import {
-  userService,
-  type CreateUserInput,
-  type UpdateUserInput,
-} from '@/services/user.service';
+import * as userService from '@/services/user.service';
+import type { CreateUserInput, UpdateUserInput } from '@/services/user.service';
 
 export function useUser() {
   const [users, setUsers] = useState<User[]>([]);

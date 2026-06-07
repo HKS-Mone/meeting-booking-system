@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { users as initialUsers, departments } from '@/lib/mock-data';
-import { User } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { useUser } from '../../../../../hook/useUser';
+import type { User, Department } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import {
   Pencil, Trash2, Plus, UserCog,
@@ -24,7 +24,7 @@ const EMPTY_FORM: UserForm = {
   name: '',
   email: '',
   role: 'EMPLOYEE',
-  departmentId: departments[0]?.id ?? '',
+  departmentId: '',
   password: '',
 };
 
@@ -59,9 +59,10 @@ interface FormFieldsProps {
   showPassword: boolean;
   onTogglePassword: () => void;
   isEdit: boolean;
+  departments: Department[];
 }
 
-function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit }: FormFieldsProps) {
+function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments }: Readonly<FormFieldsProps>) {
   const pwStrength = getPasswordStrength(form.password);
 
   return (
@@ -134,9 +135,13 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               className={`${inputCls} appearance-none`}
               style={selectStyle}
             >
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
+              {departments.length === 0 ? (
+                <option value="" disabled>Loading departments...</option>
+              ) : (
+                departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))
+              )}
             </select>
           </div>
         </div>
@@ -200,62 +205,99 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
 
 /* ───────────────  */
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const {
+    users,
+    departments,
+    error: apiError,
+    loadUsers,
+    loadDepartments,
+    createUser,
+    updateUser,
+    deleteUser: apiDeleteUser,
+  } = useUser();
+
   const [addOpen, setAddOpen]     = useState(false);
   const [editUser, setEditUser]   = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [form, setForm]           = useState<UserForm>(EMPTY_FORM);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    loadUsers();
+    loadDepartments();
+  }, [loadUsers, loadDepartments]);
+
+  useEffect(() => {
+    if (departments.length > 0 && !form.departmentId && !editUser) {
+      setForm((prev) => ({ ...prev, departmentId: departments[0].id }));
+    }
+  }, [departments, form.departmentId, editUser]);
+
   const onChange = (f: Partial<UserForm>) => setForm((prev) => ({ ...prev, ...f }));
   const togglePw = () => setShowPassword((v) => !v);
 
   /* ── CRUD ────────────────── */
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name.trim() || !form.email.trim() || form.password.length < 8) return;
-    const dept = departments.find((d) => d.id === form.departmentId);
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-      departmentId: form.departmentId,
-      department: dept,
-      createdAt: new Date().toISOString(),
-    };
-    setUsers((prev) => [newUser, ...prev]);
-    setForm(EMPTY_FORM);
-    setShowPassword(false);
-    setAddOpen(false);
+    try {
+      await createUser({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        role: form.role,
+        departmentId: form.departmentId || undefined,
+        password: form.password,
+      });
+      setForm(EMPTY_FORM);
+      setShowPassword(false);
+      setAddOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!editUser) return;
-    const dept = departments.find((d) => d.id === form.departmentId);
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === editUser.id
-          ? { ...u, name: form.name, email: form.email, role: form.role, departmentId: form.departmentId, department: dept }
-          : u
-      )
-    );
-    setShowPassword(false);
-    setEditUser(null);
+    try {
+      await updateUser(editUser.id, {
+        name: form.name.trim() || undefined,
+        email: form.email.trim() || undefined,
+        role: form.role,
+        departmentId: form.departmentId || undefined,
+        password: form.password || undefined,
+      });
+      setShowPassword(false);
+      setEditUser(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleDelete = (u: User) => {
-    setUsers((prev) => prev.filter((x) => x.id !== u.id));
-    setDeleteUser(null);
+  const handleDelete = async (u: User) => {
+    try {
+      await apiDeleteUser(u.id);
+      setDeleteUser(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const openAdd = () => {
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      departmentId: departments[0]?.id ?? '',
+    });
     setShowPassword(false);
     setAddOpen(true);
   };
 
   const openEdit = (u: User) => {
-    setForm({ name: '', email: '', role: 'EMPLOYEE', departmentId: u.departmentId ?? departments[0]?.id ?? '', password: '' });
+    setForm({ 
+      name: u.name, 
+      email: u.email, 
+      role: 'EMPLOYEE', 
+      departmentId: u.departmentId ?? departments[0]?.id ?? '', 
+      password: '' 
+    });
     setShowPassword(false);
     setEditUser(u);
   };
@@ -395,6 +437,7 @@ export default function ManageUsersPage() {
             showPassword={showPassword}
             onTogglePassword={togglePw}
             isEdit={false}
+            departments={departments}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeAdd} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -422,6 +465,7 @@ export default function ManageUsersPage() {
             showPassword={showPassword}
             onTogglePassword={togglePw}
             isEdit={true}
+            departments={departments}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeEdit} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
