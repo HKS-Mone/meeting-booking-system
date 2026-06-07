@@ -14,10 +14,10 @@ import {
   CalendarDays,
   Clock,
   FileText,
-  Users,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
+  Building2,
 } from 'lucide-react';
 
 // ─── Form state ───────────────────────────────────────────────────────────────
@@ -221,17 +221,17 @@ export default function AddBookingPage() {
               </div>
             </div>
 
-            {/* Booked By */}
+            {/* Department */}
             <div className="space-y-1.5">
-              <label htmlFor="ab-bookedby" className="block text-sm font-medium text-gray-700">
-                Booked By
+              <label htmlFor="ab-department" className="block text-sm font-medium text-gray-700">
+                Department
               </label>
               <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <select
-                  id="ab-bookedby"
-                  value={form.userId}
-                  onChange={(e) => fieldVal({ userId: e.target.value })}
+                  id="ab-department"
+                  value={form.departmentId}
+                  onChange={(e) => fieldVal({ departmentId: e.target.value })}
                   className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -239,17 +239,17 @@ export default function AddBookingPage() {
                     backgroundPosition: 'right 12px center',
                   }}
                 >
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
               </div>
             </div>
             
-            {/* Title */}
+            {/* Description */}
             <div className="space-y-1.5">
               <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
-                Title
+                Description
               </label>
               <div className="relative">
                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -258,7 +258,7 @@ export default function AddBookingPage() {
                   type="text"
                   value={form.description}
                   onChange={(e) => fieldVal({ description: e.target.value })}
-                  placeholder="Enter meeting title..."
+                  placeholder="Enter meeting description..."
                   maxLength={250}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
