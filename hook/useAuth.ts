@@ -78,14 +78,13 @@ export function useAuth() {
     setError(null);
 
     try {
-      await authService.logout();
+      const result = await authService.logout();
       clearAuth();
+      return result;
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Unable to sign out.",
-      );
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to sign out.";
+      setError(message);
+      return { success: false, error: message };
     } finally {
       setIsLoading(false);
     }

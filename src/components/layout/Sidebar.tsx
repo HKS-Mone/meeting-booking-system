@@ -12,7 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useAuthStore } from '@/lib/auth-store';
+import { useAuth } from '../../../hook/useAuth';
 import { useUIStore } from '@/lib/ui-store';
 import { useRouter } from 'next/navigation';
 
@@ -24,7 +24,7 @@ const navLinks = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuthStore();
+  const { logout } = useAuth();
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore();
   const router = useRouter();
 
@@ -35,8 +35,8 @@ export default function Sidebar() {
     }
   }, [pathname, setSidebarCollapsed]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
   };
 

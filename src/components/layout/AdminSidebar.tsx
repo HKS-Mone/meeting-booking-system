@@ -5,10 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  DoorOpen,
   Building2,
   Users,
-  BarChart2,
   Settings,
   LogOut,
   Calendar,
@@ -18,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useAuthStore } from '@/lib/auth-store';
+import { useAuth } from '../../../hook/useAuth';
 import { useUIStore } from '@/lib/ui-store';
 import { useRouter } from 'next/navigation';
 
@@ -34,7 +32,7 @@ const adminLinks = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuthStore();
+  const { logout } = useAuth();
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore();
   const router = useRouter();
 
@@ -45,8 +43,8 @@ export default function AdminSidebar() {
     }
   }, [pathname, setSidebarCollapsed]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
   };
 

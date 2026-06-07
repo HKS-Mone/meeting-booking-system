@@ -23,6 +23,6 @@ export const authService = {
   },
 
   async logout() {
-    await logoutAction();
+    return logoutAction();
   },
 };
