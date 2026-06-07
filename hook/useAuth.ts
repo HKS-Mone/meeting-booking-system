@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { User } from '@/lib/types';
+import { useAuthStore } from '@/lib/auth-store';
 import { authService, type LoginCredentials } from '@/services/auth.service';
 
 export function useAuth() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { currentUser, setCurrentUser, logout: clearAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +21,10 @@ export function useAuth() {
         return result;
       }
 
-      setCurrentUser(result.user ?? null);
+      if (result.user) {
+        setCurrentUser(result.user);
+      }
+
       return result;
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : 'Unable to sign in.';
@@ -38,13 +41,13 @@ export function useAuth() {
 
     try {
       await authService.logout();
-      setCurrentUser(null);
+      clearAuth();
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to sign out.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [clearAuth]);
 
   return {
     currentUser,
