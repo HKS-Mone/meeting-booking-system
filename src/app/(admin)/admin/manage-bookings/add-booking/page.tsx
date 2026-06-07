@@ -247,25 +247,22 @@ export default function AddBookingPage() {
               </div>
             </div>
 
-            {/* Description / Purpose */}
+            {/* Title / Purpose */}
             <div className="space-y-1.5">
               <label htmlFor="ab-purpose" className="block text-sm font-medium text-gray-700">
-                Description <span className="text-gray-400 font-normal">(Optional)</span>
+                Title
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
-                <textarea
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
                   id="ab-purpose"
-                  rows={3}
+                  type="text"
                   value={form.purpose}
                   onChange={(e) => fieldVal({ purpose: e.target.value })}
-                  placeholder="Enter meeting description or agenda..."
+                  placeholder="Enter meeting title..."
                   maxLength={250}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
-                <span className="absolute bottom-2.5 right-3 text-[10px] text-gray-400">
-                  {form.purpose.length} / 250
-                </span>
               </div>
             </div>
 
@@ -381,9 +378,9 @@ export default function AddBookingPage() {
                       </div>
                       <p className="text-xs text-gray-500 pl-4">
                         {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                        {b.room?.name && (
+                        {b.department?.name && (
                           <span className="before:content-['•'] before:mx-1.5 before:text-gray-300">
-                            {b.room.name}
+                            {b.department.name}
                           </span>
                         )}
                       </p>
