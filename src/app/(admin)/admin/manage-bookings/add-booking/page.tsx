@@ -351,13 +351,13 @@ export default function AddBookingPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
-                        <p className={`font-semibold text-sm ${color.text} truncate`}>{b.purpose}</p>
+                        <p className={`font-semibold text-sm ${color.text} truncate`}>{b.department?.name}</p>
                       </div>
                       <p className="text-xs text-gray-500 pl-4">
                         {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                        {b.department?.name && (
+                        {b.purpose && (
                           <span className="before:content-['•'] before:mx-1.5 before:text-gray-300">
-                            {b.department.name}
+                            {b.purpose}
                           </span>
                         )}
                       </p>
