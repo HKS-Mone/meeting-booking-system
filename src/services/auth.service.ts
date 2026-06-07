@@ -1,4 +1,5 @@
 import type { User } from '@/lib/types';
+import { getSessionAction, loginAction, logoutAction } from '@/app/(auth)/login/actions';
 
 export interface LoginCredentials {
   email: string;
@@ -12,43 +13,16 @@ export interface AuthResult {
   error?: string;
 }
 
-async function postAuth<TBody>(url: string, body: TBody): Promise<AuthResult> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  const data = (await response.json()) as AuthResult;
-  if (!response.ok) {
-    return { success: false, error: data.error ?? 'Authentication failed.' };
-  }
-
-  return data;
-}
-
 export const authService = {
   async getSession() {
-    const response = await fetch('/api/auth/login', {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    const data = (await response.json()) as AuthResult;
-    if (!response.ok) {
-      return { success: false, error: data.error ?? 'Invalid session.' };
-    }
-
-    return data;
+    return getSessionAction();
   },
 
   login(credentials: LoginCredentials) {
-    return postAuth('/api/auth/login', credentials);
+    return loginAction(credentials);
   },
 
   async logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await logoutAction();
   },
 };
