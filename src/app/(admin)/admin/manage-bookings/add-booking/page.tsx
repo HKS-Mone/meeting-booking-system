@@ -4,23 +4,19 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   bookings as allBookings,
-  rooms,
   departments,
   users,
 } from '@/lib/mock-data';
-import { Booking } from '@/lib/types';
-import { formatTime, getMeetingStatus } from '@/lib/utils';
+import { formatTime } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
   CalendarDays,
   Clock,
-  Building2,
   FileText,
   Users,
   ChevronLeft,
   ChevronRight,
-  Info,
   MoreVertical,
 } from 'lucide-react';
 
