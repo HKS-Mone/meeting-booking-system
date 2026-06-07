@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { createHash, createHmac, pbkdf2Sync, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 import { AuthRepository } from '@/repository/auth.repository';
 import type { User } from '@/lib/types';
 import type { AuthResult, LoginCredentials } from '@/services/auth.service';
@@ -26,13 +26,13 @@ function getJwtSecret() {
 function base64Url(input: Buffer | string) {
   return Buffer.from(input)
     .toString('base64')
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
+    .replaceAll('=', '')
+    .replaceAll('+', '-')
+    .replaceAll('/', '_');
 }
 
 function decodeBase64Url(input: string) {
-  const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  const base64 = input.replaceAll('-', '+').replaceAll('_', '/');
   return Buffer.from(base64, 'base64').toString('utf8');
 }
 
