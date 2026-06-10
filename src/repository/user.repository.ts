@@ -56,6 +56,13 @@ export class UserRepository {
     });
   }
 
+  static async updatePassword(id: number, passwordHash: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { password: passwordHash },
+    });
+  }
+
   static async delete(id: number, softDelete = true) {
     if (softDelete) {
       return prisma.user.update({
