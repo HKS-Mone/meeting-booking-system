@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { ToastContainer } from '@/components/ui/Toast';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -9,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Mone Meeting — Meeting Room Booking System',
+  title: 'Mone Meeting',
   description:
     'A professional meeting room booking management system for enterprise teams.',
 };
@@ -21,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full" suppressHydrationWarning>
+        {children}
+        <ToastContainer />
+      </body>
     </html>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { departments } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
+import { useUser } from '../../../../../hook/useUser';
 import {
     UserPlus,
     User,
@@ -26,7 +26,7 @@ interface AdminForm {
 const EMPTY_FORM: AdminForm = {
     name: '',
     role: 'ADMIN',
-    departmentId: departments[0]?.id ?? '',
+    departmentId: '',
     email: '',
     password: '',
 };
@@ -47,6 +47,18 @@ export default function AddAdminPage() {
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof AdminForm, string>>>({});
 
+    const { departments, loadDepartments, createUser} = useUser();
+
+    useEffect(() => {
+        loadDepartments();
+    }, [loadDepartments]);
+
+    useEffect(() => {
+        if (departments.length > 0 && !form.departmentId) {
+            setForm((prev) => ({ ...prev, departmentId: departments[0].id }));
+        }
+    }, [departments, form.departmentId]);
+
     const set = (f: Partial<AdminForm>) => setForm((prev) => ({ ...prev, ...f }));
 
     const validate = () => {
@@ -61,15 +73,28 @@ export default function AddAdminPage() {
         return Object.keys(e).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
-        // TODO: integrate with backend / auth
-        setSubmitted(true);
+        try {
+            await createUser({
+                name: form.name.trim(),
+                email: form.email.trim(),
+                role: 'ADMIN',
+                departmentId: form.departmentId || undefined,
+                password: form.password,
+            });
+            setSubmitted(true);
+        } catch (err: any) {
+            setErrors({ email: err?.message || 'Failed to create admin' });
+        }
     };
 
     const handleReset = () => {
-        setForm(EMPTY_FORM);
+        setForm({
+            ...EMPTY_FORM,
+            departmentId: departments[0]?.id ?? '',
+        });
         setErrors({});
         setSubmitted(false);
     };
@@ -243,11 +268,15 @@ export default function AddAdminPage() {
                                     paddingRight: '36px',
                                 }}
                             >
-                                {departments.map((d) => (
-                                    <option key={d.id} value={d.id}>
-                                        {d.name}
-                                    </option>
-                                ))}
+                                {departments.length === 0 ? (
+                                    <option value="" disabled>Loading departments...</option>
+                                ) : (
+                                    departments.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.name}
+                                        </option>
+                                    ))
+                                )}
                             </select>
                             {errors.departmentId && <p className="text-xs text-red-500">{errors.departmentId}</p>}
                         </div>

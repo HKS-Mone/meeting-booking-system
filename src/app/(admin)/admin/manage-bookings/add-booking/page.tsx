@@ -4,33 +4,27 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   bookings as allBookings,
-  rooms,
   departments,
   users,
 } from '@/lib/mock-data';
-import { Booking } from '@/lib/types';
-import { formatTime, getMeetingStatus } from '@/lib/utils';
+import { formatTime } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
   CalendarDays,
   Clock,
-  Building2,
   FileText,
-  Users,
   ChevronLeft,
   ChevronRight,
-  Info,
   MoreVertical,
+  Building2,
 } from 'lucide-react';
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 interface BookingForm {
-  roomId: string;
   departmentId: string;
   userId: string;
-  purpose: string;
-  participants: string;
+  description: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -38,12 +32,17 @@ interface BookingForm {
 
 const today = format(new Date(), 'yyyy-MM-dd');
 
+function formatHourLabel(i: number): string {
+  if (i === 0) return '05:00 AM';
+  if (i < 12) return `${i}:00 AM`;
+  if (i === 12) return '12:00 PM';
+  return `${i - 12}:00 PM`;
+}
+
 const EMPTY_FORM: BookingForm = {
-  roomId: rooms[0]?.id ?? '',
   departmentId: departments[0]?.id ?? '',
   userId: users[0]?.id ?? '',
-  purpose: '',
-  participants: '1',
+  description: '',
   date: today,
   startTime: '09:00',
   endTime: '10:00',
@@ -106,7 +105,7 @@ export default function AddBookingPage() {
   // ─── Submit ─────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.purpose.trim()) return;
+    if (!form.description.trim()) return;
     // In a real app: persist the booking here
     router.push('/admin/manage-bookings');
   };
@@ -184,7 +183,7 @@ export default function AddBookingPage() {
                       const hh = String(i).padStart(2, '0');
                       return (
                         <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                          {formatHourLabel(i)}
                         </option>
                       );
                     })}
@@ -213,7 +212,7 @@ export default function AddBookingPage() {
                       const hh = String(i).padStart(2, '0');
                       return (
                         <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                          {formatHourLabel(i)}
                         </option>
                       );
                     })}
@@ -246,28 +245,26 @@ export default function AddBookingPage() {
                 </select>
               </div>
             </div>
-
-            {/* Description / Purpose */}
+            
+            {/* Description */}
             <div className="space-y-1.5">
-              <label htmlFor="ab-purpose" className="block text-sm font-medium text-gray-700">
-                Description <span className="text-gray-400 font-normal">(Optional)</span>
+              <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
+                Description
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
-                <textarea
-                  id="ab-purpose"
-                  rows={3}
-                  value={form.purpose}
-                  onChange={(e) => fieldVal({ purpose: e.target.value })}
-                  placeholder="Enter meeting description or agenda..."
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  id="ab-description"
+                  type="text"
+                  value={form.description}
+                  onChange={(e) => fieldVal({ description: e.target.value })}
+                  placeholder="Enter meeting description..."
                   maxLength={250}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
-                <span className="absolute bottom-2.5 right-3 text-[10px] text-gray-400">
-                  {form.purpose.length} / 250
-                </span>
               </div>
             </div>
+
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">
@@ -330,25 +327,6 @@ export default function AddBookingPage() {
                 >
                   Today
                 </button>
-
-                {/* View switcher */}
-                <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-                  {(['Day', 'Week', 'Month'] as CalView[]).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      id={`cal-view-${v.toLowerCase()}-btn`}
-                      onClick={() => setCalView(v)}
-                      className={`px-3 py-1 text-xs font-medium transition-colors ${calView === v
-                        ? 'text-white'
-                        : 'text-gray-500 hover:bg-gray-50'
-                        }`}
-                      style={calView === v ? { background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' } : {}}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -377,13 +355,13 @@ export default function AddBookingPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
-                        <p className={`font-semibold text-sm ${color.text} truncate`}>{b.purpose}</p>
+                        <p className={`font-semibold text-sm ${color.text} truncate`}>{b.department?.name}</p>
                       </div>
                       <p className="text-xs text-gray-500 pl-4">
                         {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                        {b.room?.name && (
+                        {b.purpose && (
                           <span className="before:content-['•'] before:mx-1.5 before:text-gray-300">
-                            {b.room.name}
+                            {b.purpose}
                           </span>
                         )}
                       </p>

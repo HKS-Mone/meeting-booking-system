@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/auth-store';
+import { useAuth } from '../../../../hook/useAuth';
 import { Eye, EyeOff, Mail, Lock, Calendar } from 'lucide-react';
-import type { Metadata } from 'next';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -12,10 +11,20 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const { login } = useAuthStore();
+  const { currentUser, login, isLoading, isCheckingSession } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!currentUser || isCheckingSession) {
+      return;
+    }
+
+    if (currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN') {
+      router.replace('/admin/dashboard');
+    } else {
+      router.replace('/calendar');
+    }
+  }, [currentUser, isCheckingSession, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,18 +35,14 @@ export default function LoginPage() {
     if (!password) { setError('Password is required.'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
 
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 600)); 
-
-    const result = login(email, password);
-    setLoading(false);
+    const result = await login({ email, password });
 
     if (!result.success) {
       setError(result.error ?? 'Login failed.');
       return;
     }
 
-    const user = useAuthStore.getState().currentUser;
+    const user = result.user;
     if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
       router.push('/admin/dashboard');
     } else {
@@ -183,10 +188,10 @@ export default function LoginPage() {
             <button
               type="submit"
               id="login-btn"
-              disabled={loading}
+              disabled={isLoading || isCheckingSession}
               className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {isLoading || isCheckingSession ? (
                 <>
                   <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
@@ -199,15 +204,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo credentials hint */}
-          {/* <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-            <p className="text-xs font-semibold text-blue-700 mb-2">Demo Credentials</p>
-            <div className="space-y-1 text-xs text-blue-600">
-              <p><span className="font-medium">Admin:</span> admin@meetinghub.com / admin123</p>
-              <p><span className="font-medium">User:</span> dilshan@meetinghub.com / user123</p>
-            </div>
-          </div> */}
 
           <p className="text-center text-xs text-gray-400 mt-6">
             Don&apos;t have an account?{' '}
