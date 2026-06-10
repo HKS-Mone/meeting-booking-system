@@ -135,6 +135,10 @@ export const authCookie = {
 };
 
 export const serverAuthService = {
+  verifyPassword(password: string, storedPassword?: string | null): boolean {
+    return verifyPassword(password, storedPassword);
+  },
+
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     const email = credentials.email.trim().toLowerCase();
     const user = await AuthRepository.validateUser(email);

@@ -3,7 +3,9 @@
 import prisma from '@/lib/prisma';
 import { UserRepository } from '@/repository/user.repository';
 import type { User, Department, Role } from '@/lib/types';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
+import { cookies } from 'next/headers';
+import { authCookie, serverAuthService } from '@/services/auth-server.service';
 
 export interface CreateUserInput {
   name: string;
@@ -112,4 +114,34 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Us
 export async function deleteUser(id: string): Promise<boolean> {
   await UserRepository.delete(Number(id));
   return true;
+}
+
+export async function updatePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(authCookie.name)?.value;
+    const authResult = await serverAuthService.authenticateToken(token);
+    
+    if (!authResult.success || !authResult.user) {
+      return { success: false, error: 'Unauthorized.' };
+    }
+    
+    const userId = Number(authResult.user.id);
+    const dbUser = await UserRepository.findById(userId);
+    if (!dbUser) {
+      return { success: false, error: 'User not found.' };
+    }
+    
+    const isCurrentValid = serverAuthService.verifyPassword(currentPassword, dbUser.password);
+    if (!isCurrentValid) {
+      return { success: false, error: 'Incorrect current password.' };
+    }
+    
+    const newPasswordHash = hashPassword(newPassword);
+    await UserRepository.updatePassword(userId, newPasswordHash);
+    
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'An error occurred while updating the password.' };
+  }
 }
