@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
-
 echo "Running Prisma migrations..."
-npx prisma migrate deploy
-
+npx prisma@5 migrate deploy
 echo "Starting Next.js server..."
 exec "$@"
