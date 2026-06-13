@@ -33,6 +33,16 @@ const EMPTY_FORM: BookingForm = {
 };
 
 // ─── Page ───────────
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function bookingTimeToMinutes(iso: string): number {
+  const date = new Date(iso);
+  return date.getHours() * 60 + date.getMinutes();
+}
+
 export default function ManageBookingsPage() {
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
@@ -85,8 +95,36 @@ export default function ManageBookingsPage() {
     setForm((prev) => ({ ...prev, ...f }));
 
   // ─── CRUD ────────────────────────────────
+  const overlappingBooking = useMemo(() => {
+    if (!editBooking) return null;
+
+    const start = timeToMinutes(form.startTime);
+    const end = timeToMinutes(form.endTime);
+    if (start >= end) return null;
+
+    return (
+      bookingList.find((booking) => {
+        if (booking.id === editBooking.id || booking.date !== form.date) return false;
+
+        const existingStart = bookingTimeToMinutes(booking.startTime);
+        const existingEnd = bookingTimeToMinutes(booking.endTime);
+        return start < existingEnd && end > existingStart;
+      }) ?? null
+    );
+  }, [bookingList, editBooking, form.date, form.endTime, form.startTime]);
+
   const handleEdit = async () => {
     if (!editBooking) return;
+
+    if (timeToMinutes(form.startTime) >= timeToMinutes(form.endTime)) {
+      addToast('End time must be after start time.', 'error');
+      return;
+    }
+
+    if (overlappingBooking) {
+      addToast(`This time overlaps with booking ${overlappingBooking.bookingCode}.`, 'error');
+      return;
+    }
 
     setIsSaving(true);
     const result = await updateBookingAction(editBooking.id, {
@@ -416,7 +454,7 @@ export default function ManageBookingsPage() {
               id="save-edit-booking-btn"
               onClick={handleEdit}
               disabled={isSaving}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
