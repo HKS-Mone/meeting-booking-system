@@ -23,11 +23,15 @@ export async function loginAction(credentials: LoginCredentials) {
     return { success: false, error: result.error ?? 'Invalid email or password.' };
   }
 
+  const isSecureContext =
+    process.env.NEXTAUTH_URL?.startsWith('https://') ??
+    process.env.NODE_ENV === 'production';
+
   const cookieStore = await cookies();
   cookieStore.set(authCookie.name, result.token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecureContext,
     maxAge: authCookie.maxAge,
     path: '/',
   });

@@ -35,6 +35,11 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NODE_ENV: production
+      # Set to your server's URL. Use http:// if you don't have TLS/HTTPS —
+      # this prevents the auth cookie from being set with Secure flag over HTTP.
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      # Secret used to sign JWT tokens. Change this to a strong random value.
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3000:3000"
     depends_on:
