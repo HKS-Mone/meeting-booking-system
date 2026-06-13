@@ -1,54 +1,74 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  bookings as initialBookings,
-  rooms,
-  departments,
-  users,
-} from '@/lib/mock-data';
 import { Booking } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import { formatDate, formatTime, getMeetingStatus } from '@/lib/utils';
-import { Plus, Pencil, Trash2, Search, CalendarDays, Clock, Building2, FileText, Users, User } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CalendarDays, Clock, Building2, FileText, User } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  deleteBookingAction,
+  getBookingsAction,
+  updateBookingAction,
+} from '@/services/booking.service';
+import { useToastStore } from '@/components/ui/Toast';
 
-// ─── Form state shape ─────────────────────────────────────────────────────────
+// ─── Form state shape ─────────────────
 interface BookingForm {
-  roomId: string;
   departmentId: string;
-  userId: string;
   purpose: string;
-  participants: string;
   date: string;
   startTime: string;
   endTime: string;
 }
 
 const EMPTY_FORM: BookingForm = {
-  roomId: rooms[0]?.id ?? '',
-  departmentId: departments[0]?.id ?? '',
-  userId: users[0]?.id ?? '',
+  departmentId: '',
   purpose: '',
-  participants: '1',
   date: format(new Date(), 'yyyy-MM-dd'),
   startTime: '09:00',
   endTime: '10:00',
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ───────────
 export default function ManageBookingsPage() {
   const router = useRouter();
-  const [bookingList, setBookingList] = useState<Booking[]>(initialBookings);
+  const addToast = useToastStore((state) => state.addToast);
+  const [bookingList, setBookingList] = useState<Booking[]>([]);
   const [search, setSearch] = useState('');
-  const [addOpen, setAddOpen] = useState(false);
   const [editBooking, setEditBooking] = useState<Booking | null>(null);
   const [deleteBooking, setDeleteBooking] = useState<Booking | null>(null);
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // ─── Filtered list ───────────────────────────────────────────────────────
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadBookings() {
+      setIsLoading(true);
+      const result = await getBookingsAction();
+      if (ignore) return;
+
+      if (result.success) {
+        setBookingList(result.bookings ?? []);
+      } else {
+        addToast(result.error ?? 'Failed to load bookings.', 'error');
+      }
+
+      setIsLoading(false);
+    }
+
+    void loadBookings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [addToast]);
+
+  // ─── Filtered list ────────────────────
   const filtered = useMemo(() => {
     if (!search) return bookingList;
     const q = search.toLowerCase();
@@ -56,69 +76,57 @@ export default function ManageBookingsPage() {
       (b) =>
         b.bookingCode.toLowerCase().includes(q) ||
         b.purpose.toLowerCase().includes(q) ||
-        b.room?.name.toLowerCase().includes(q) ||
         b.department?.name.toLowerCase().includes(q)
     );
   }, [bookingList, search]);
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────
   const fieldVal = (f: Partial<BookingForm>) =>
     setForm((prev) => ({ ...prev, ...f }));
 
-  const buildBooking = (f: BookingForm, id?: string, code?: string): Booking => {
-    const room = rooms.find((r) => r.id === f.roomId)!;
-    const department = departments.find((d) => d.id === f.departmentId)!;
-    const user = users.find((u) => u.id === f.userId)!;
-    const startIso = new Date(`${f.date}T${f.startTime}:00`).toISOString();
-    const endIso = new Date(`${f.date}T${f.endTime}:00`).toISOString();
-    const newId = id ?? `bk-${Date.now()}`;
-    const newCode = code ?? `BK-${Date.now().toString().slice(-4)}`;
-    return {
-      id: newId,
-      bookingCode: newCode,
-      userId: user.id,
-      user,
-      roomId: room.id,
-      room,
-      departmentId: department.id,
-      department,
-      purpose: f.purpose,
-      participants: Number(f.participants),
-      startTime: startIso,
-      endTime: endIso,
-      date: f.date,
-      createdAt: new Date().toISOString(),
-    };
-  };
+  // ─── CRUD ────────────────────────────────
+  const handleEdit = async () => {
+    if (!editBooking) return;
 
-  // ─── CRUD ─────────────────────────────────────────────────────────────────
-  const handleAdd = () => {
-    if (!form.purpose.trim()) return;
-    const newBooking = buildBooking(form);
-    setBookingList((prev) => [newBooking, ...prev]);
-    setForm(EMPTY_FORM);
-    setAddOpen(false);
-  };
+    setIsSaving(true);
+    const result = await updateBookingAction(editBooking.id, {
+      departmentId: form.departmentId,
+      description: form.purpose,
+      date: form.date,
+      startTime: form.startTime,
+      endTime: form.endTime,
+    });
+    setIsSaving(false);
 
-  const handleEdit = () => {
-    if (!editBooking || !form.purpose.trim()) return;
-    const updated = buildBooking(form, editBooking.id, editBooking.bookingCode);
-    setBookingList((prev) => prev.map((b) => (b.id === editBooking.id ? updated : b)));
+    if (!result.success || !result.booking) {
+      addToast(result.error ?? 'Failed to update booking.', 'error');
+      return;
+    }
+
+    setBookingList((prev) => prev.map((b) => (b.id === editBooking.id ? result.booking! : b)));
     setEditBooking(null);
+    addToast('Booking updated successfully.', 'success');
   };
 
-  const handleDelete = (b: Booking) => {
+  const handleDelete = async (b: Booking) => {
+    setIsSaving(true);
+    const result = await deleteBookingAction(b.id);
+    setIsSaving(false);
+
+    if (!result.success) {
+      addToast(result.error ?? 'Failed to delete booking.', 'error');
+      return;
+    }
+
     setBookingList((prev) => prev.filter((x) => x.id !== b.id));
     setDeleteBooking(null);
+    addToast('Booking deleted successfully.', 'success');
   };
 
   const openEdit = (b: Booking) => {
     setForm({
-      roomId: b.roomId,
       departmentId: b.departmentId,
-      userId: b.userId,
       purpose: b.purpose,
-      participants: String(b.participants),
       date: b.date,
       startTime: format(new Date(b.startTime), 'HH:mm'),
       endTime: format(new Date(b.endTime), 'HH:mm'),
@@ -126,30 +134,21 @@ export default function ManageBookingsPage() {
     setEditBooking(b);
   };
 
-  // ─── Shared form JSX ──────────────────────────────────────────────────────
-  const BookingFormFields = () => (
+  // ─── Shared form JSX ───────────────────────
+  const bookingFormFields = (
     <div className="space-y-4">
       {/* Department */}
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-gray-700">Department</label>
         <div className="relative">
           <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select
+          <input
             id="form-department"
+            type="text"
             disabled
-            value={form.departmentId}
-            onChange={(e) => fieldVal({ departmentId: e.target.value })}
+            value={editBooking?.department?.name ?? 'Department'}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 12px center',
-            }}
-          >
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
+          />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
             locked
           </span>
@@ -164,7 +163,7 @@ export default function ManageBookingsPage() {
           <input
             id="form-user"
             type="text"
-            value={users.find((u) => u.id === form.userId)?.name ?? 'Admin User'}
+            value={editBooking?.user?.name ?? 'Admin User'}
             disabled
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
           />
@@ -268,7 +267,7 @@ export default function ManageBookingsPage() {
     </div>
   );
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -290,7 +289,7 @@ export default function ManageBookingsPage() {
         <input
           id="booking-search"
           type="text"
-          placeholder="Search by booking ID, description, room or department…"
+          placeholder="Search by booking ID, description or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -401,35 +400,14 @@ export default function ManageBookingsPage() {
         </div>
       </div>
 
-      {/* Add Modal */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="New Booking" size="md">
-        <div className="space-y-5">
-          <BookingFormFields />
-          <div className="flex gap-3 pt-1">
-            <button
-              onClick={() => setAddOpen(false)}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              id="save-new-booking-btn"
-              onClick={handleAdd}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Create Booking
-            </button>
-          </div>
-        </div>
-      </Modal>
-
       {/* Edit Modal */}
       <Modal open={!!editBooking} onClose={() => setEditBooking(null)} title="Edit Booking" size="md">
         <div className="space-y-5">
-          <BookingFormFields />
+          {bookingFormFields}
           <div className="flex gap-3 pt-1">
             <button
               onClick={() => setEditBooking(null)}
+              disabled={isSaving}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
             >
               Cancel
@@ -437,9 +415,10 @@ export default function ManageBookingsPage() {
             <button
               id="save-edit-booking-btn"
               onClick={handleEdit}
+              disabled={isSaving}
               className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -457,6 +436,7 @@ export default function ManageBookingsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteBooking(null)}
+                disabled={isSaving}
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
               >
                 Cancel
@@ -464,9 +444,10 @@ export default function ManageBookingsPage() {
               <button
                 id={`confirm-delete-booking-${deleteBooking.id}`}
                 onClick={() => handleDelete(deleteBooking)}
+                disabled={isSaving}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
               >
-                Delete
+                {isSaving ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
