@@ -14,6 +14,7 @@ import {
   updateBookingAction,
 } from '@/services/booking.service';
 import { useToastStore } from '@/components/ui/Toast';
+import { staggerStyle, staggerClass } from '@/lib/animations';
 
 // ─── Form state shape ─────────────────
 interface BookingForm {
@@ -172,6 +173,15 @@ export default function ManageBookingsPage() {
     setEditBooking(b);
   };
 
+  // ─── Input style ──────────────────────────
+  const inputCls = 'w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200';
+  const selectCls = `${inputCls} pr-8 appearance-none bg-white`;
+  const selectBg = {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundPosition: 'right 12px center',
+  };
+
   // ─── Shared form JSX ───────────────────────
   const bookingFormFields = (
     <div className="space-y-4">
@@ -221,7 +231,7 @@ export default function ManageBookingsPage() {
             type="date"
             value={form.date}
             onChange={(e) => fieldVal({ date: e.target.value })}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className={inputCls}
           />
         </div>
       </div>
@@ -236,12 +246,8 @@ export default function ManageBookingsPage() {
               id="form-start-time"
               value={form.startTime}
               onChange={(e) => fieldVal({ startTime: e.target.value })}
-              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-              }}
+              className={selectCls}
+              style={selectBg}
             >
               {Array.from({ length: 24 }, (_, i) => {
                 const hh = String(i).padStart(2, '0');
@@ -263,12 +269,8 @@ export default function ManageBookingsPage() {
               id="form-end-time"
               value={form.endTime}
               onChange={(e) => fieldVal({ endTime: e.target.value })}
-              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-              }}
+              className={selectCls}
+              style={selectBg}
             >
               {Array.from({ length: 24 }, (_, i) => {
                 const hh = String(i).padStart(2, '0');
@@ -295,7 +297,7 @@ export default function ManageBookingsPage() {
             onChange={(e) => fieldVal({ purpose: e.target.value })}
             placeholder="Enter meeting description or agenda..."
             maxLength={250}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+            className={`${inputCls} resize-none`}
           />
           <span className="absolute bottom-2.5 right-3 text-[10px] text-gray-400">
             {form.purpose.length} / 250
@@ -307,30 +309,30 @@ export default function ManageBookingsPage() {
 
   // ─── Render ───────────────────────────────
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-500">Admin Panel › Manage Bookings</p>
         <button
           id="add-booking-btn"
           onClick={() => router.push('/admin/manage-bookings/add-booking')}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
+          className="group flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95 btn-press"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
           New Booking
         </button>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors" />
         <input
           id="booking-search"
           type="text"
           placeholder="Search by booking ID, description or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
         />
       </div>
 
@@ -340,10 +342,14 @@ export default function ManageBookingsPage() {
           <div className="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center text-gray-400 text-sm">
             No bookings found.
           </div>
-        ) : filtered.map((b) => {
+        ) : filtered.map((b, idx) => {
           const status = getMeetingStatus(b.startTime, b.endTime);
           return (
-            <div key={b.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+            <div
+              key={b.id}
+              className={`bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3 hover-lift ${staggerClass()}`}
+              style={staggerStyle(idx)}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-800 text-sm truncate">{b.purpose}</p>
@@ -360,14 +366,14 @@ export default function ManageBookingsPage() {
                 <button
                   id={`edit-booking-${b.id}`}
                   onClick={() => openEdit(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-150 active:scale-95"
                 >
                   Edit
                 </button>
                 <button
                   id={`delete-booking-${b.id}`}
                   onClick={() => setDeleteBooking(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                  className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-150 active:scale-95"
                 >
                   Delete
                 </button>
@@ -382,7 +388,11 @@ export default function ManageBookingsPage() {
         <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800">
             All Bookings{' '}
-            <span className="text-sm font-normal text-gray-400">({filtered.length})</span>
+            {!isLoading && (
+              <span className="text-sm font-normal text-gray-400 animate-fade-in">
+                ({filtered.length})
+              </span>
+            )}
           </h2>
         </div>
 
@@ -402,13 +412,19 @@ export default function ManageBookingsPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">No bookings found.</td>
+                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm animate-fade-in">
+                    No bookings found.
+                  </td>
                 </tr>
               ) : (
-                filtered.map((b) => {
+                filtered.map((b, idx) => {
                   const status = getMeetingStatus(b.startTime, b.endTime);
                   return (
-                    <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={b.id}
+                      className={`hover:bg-blue-50/40 transition-colors duration-150 ${staggerClass()}`}
+                      style={staggerStyle(idx, 30)}
+                    >
                       <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
                       <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
@@ -419,13 +435,21 @@ export default function ManageBookingsPage() {
                       <td className="px-4 py-3"><MeetingStatusBadge status={status} /></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1.5">
-                          <button id={`edit-booking-${b.id}`} onClick={() => openEdit(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
-                            <Pencil className="w-3.5 h-3.5" />
+                          <button
+                            id={`edit-booking-${b.id}`}
+                            onClick={() => openEdit(b)}
+                            className="group w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-150 active:scale-90"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
-                          <button id={`delete-booking-${b.id}`} onClick={() => setDeleteBooking(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors" title="Delete">
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <button
+                            id={`delete-booking-${b.id}`}
+                            onClick={() => setDeleteBooking(b)}
+                            className="group w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-100 hover:text-red-700 transition-all duration-150 active:scale-90"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
                         </div>
                       </td>
@@ -446,7 +470,7 @@ export default function ManageBookingsPage() {
             <button
               onClick={() => setEditBooking(null)}
               disabled={isSaving}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
             >
               Cancel
             </button>
@@ -456,7 +480,12 @@ export default function ManageBookingsPage() {
               disabled={isSaving}
               className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-smooth" />
+                  Saving…
+                </span>
+              ) : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -475,7 +504,7 @@ export default function ManageBookingsPage() {
               <button
                 onClick={() => setDeleteBooking(null)}
                 disabled={isSaving}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
               >
                 Cancel
               </button>
@@ -483,9 +512,14 @@ export default function ManageBookingsPage() {
                 id={`confirm-delete-booking-${deleteBooking.id}`}
                 onClick={() => handleDelete(deleteBooking)}
                 disabled={isSaving}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md hover:shadow-red-200"
               >
-                {isSaving ? 'Deleting...' : 'Delete'}
+                {isSaving ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-smooth" />
+                    Deleting…
+                  </span>
+                ) : 'Delete'}
               </button>
             </div>
           </div>

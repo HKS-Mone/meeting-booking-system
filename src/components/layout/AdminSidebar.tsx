@@ -50,10 +50,10 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay — animated fade */}
       {!sidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          className="fixed inset-0 bg-black/50 z-20 md:hidden animate-backdrop-in"
           onClick={toggleSidebar}
         />
       )}
@@ -79,7 +79,11 @@ export default function AdminSidebar() {
         `}>
           <div className="flex items-center justify-between w-full">
             <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'md:justify-center md:w-full lg:justify-start lg:w-auto' : ''}`}>
-              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+              {/* Logo icon with hover spin */}
+              <div
+                className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0 transition-transform duration-300 hover:rotate-12 hover:scale-110"
+                style={{ transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)' }}
+              >
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
@@ -94,7 +98,8 @@ export default function AdminSidebar() {
             {!sidebarCollapsed && (
               <button
                 onClick={toggleSidebar}
-                className="md:hidden text-white/60 hover:text-white"
+                className="md:hidden text-white/60 hover:text-white transition-all duration-150 hover:rotate-90"
+                style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), color 0.15s ease' }}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -108,11 +113,10 @@ export default function AdminSidebar() {
             title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {sidebarCollapsed ? (
-              <ChevronRight className="w-4 h-4 shrink-0" />
+              <ChevronRight className="w-4 h-4 shrink-0 transition-transform duration-200" />
             ) : (
               <>
-                <ChevronLeft className="w-4 h-4 shrink-0" />
-                
+                <ChevronLeft className="w-4 h-4 shrink-0 transition-transform duration-200" />
               </>
             )}
           </button>
@@ -121,26 +125,41 @@ export default function AdminSidebar() {
         {/* Navigation */}
         <nav className={`flex-1 py-4 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'px-2 lg:px-3' : 'px-3'}`}>
           <ul className="space-y-1">
-            {adminLinks.map(({ href, label, icon: Icon }) => {
+            {adminLinks.map(({ href, label, icon: Icon }, idx) => {
               const active = pathname === href || pathname.startsWith(href + '/');
               return (
-                <li key={href}>
+                <li
+                  key={href}
+                  className="animate-stagger-in"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
                   <Link
                     href={href}
                     title={sidebarCollapsed ? label : undefined}
                     className={`
-                      flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium
-                      transition-all duration-150
+                      group relative flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium
+                      transition-all duration-200
                       ${sidebarCollapsed ? 'px-0 justify-center lg:px-3 lg:justify-start' : 'px-3 justify-start'}
                       ${
                         active
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
                           : 'text-slate-300 hover:text-white hover:bg-white/10'
                       }
                     `}
                   >
-                    <Icon className="w-4.5 h-4.5 shrink-0" />
-                    <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>{label}</span>
+                    {/* Active indicator bar */}
+                    {active && (
+                      <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-white rounded-full animate-active-bar" />
+                    )}
+
+                    {/* Icon with scale on hover */}
+                    <Icon
+                      className={`w-4.5 h-4.5 shrink-0 transition-transform duration-200 ${active ? '' : 'group-hover:scale-110'}`}
+                    />
+
+                    <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>
+                      {label}
+                    </span>
                   </Link>
                 </li>
               );
@@ -154,11 +173,13 @@ export default function AdminSidebar() {
             onClick={handleLogout}
             title={sidebarCollapsed ? 'Logout' : undefined}
             className={`
-              w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-red-500/20 transition-all duration-150
+              group w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium
+              text-slate-300 hover:text-white hover:bg-red-500/20
+              transition-all duration-200
               ${sidebarCollapsed ? 'px-0 justify-center lg:px-3 lg:justify-start' : 'px-3 justify-start'}
             `}
           >
-            <LogOut className="w-4.5 h-4.5 shrink-0" />
+            <LogOut className="w-4.5 h-4.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
             <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>Logout</span>
           </button>
         </div>

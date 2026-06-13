@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -19,9 +19,27 @@ const sizeClasses = {
 };
 
 export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+
+  const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setClosing(false);
+      setVisible(true);
+    } else if (visible) {
+      setClosing(true);
+      const t = setTimeout(() => {
+        setVisible(false);
+        setClosing(false);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [open]); 
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    if (open) {
+    if (visible) {
       document.addEventListener('keydown', handleKey);
       document.body.style.overflow = 'hidden';
     }
@@ -29,25 +47,28 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [visible, onClose]);
 
-  if (!open) return null;
+  if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
         onClick={onClose}
       />
 
-      {/* Panel — slides up on mobile, centered card on sm+ */}
+      {/* Panel — slides up on mobile, scale-in on sm+ */}
       <div
         className={`
           relative w-full ${sizeClasses[size]}
-          bg-white shadow-xl overflow-hidden
+          bg-white shadow-2xl overflow-hidden
           rounded-t-2xl sm:rounded-2xl
-          animate-slide-up sm:animate-none
+          ${closing
+            ? 'animate-slide-up sm:animate-scale-out'
+            : 'animate-slide-up sm:animate-scale-in'
+          }
         `}
         style={{ maxHeight: '92vh' }}
       >
@@ -56,7 +77,8 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           <h2 className="text-base font-semibold text-gray-800">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-150 hover:rotate-90 hover:scale-110"
+            style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), background 0.15s ease, color 0.15s ease' }}
           >
             <X className="w-4 h-4" />
           </button>
