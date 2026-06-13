@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  bookings as allBookings,
-  departments,
-  users,
-} from '@/lib/mock-data';
 import { formatTime } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useAuthStore } from '@/lib/auth-store';
+import {
+  createBookingAction,
+  getBookingsByDateAction,
+} from '@/services/booking.service';
+import { getDepartments } from '@/services/user.service';
+import type { Booking, Department } from '@/lib/types';
 import {
   ArrowLeft,
   CalendarDays,
@@ -18,6 +20,7 @@ import {
   ChevronRight,
   MoreVertical,
   Building2,
+  User,
 } from 'lucide-react';
 
 // ─── Form state ───────────────────────────────────────────────────────────────
@@ -31,8 +34,8 @@ interface BookingForm {
 }
 
 const today = format(new Date(), 'yyyy-MM-dd');
-const START_HOUR = 6;  
-const END_HOUR   = 19; 
+const START_HOUR = 6;
+const END_HOUR = 19;
 
 function formatSlotLabel(slot: string): string {
   const [hStr, mStr] = slot.split(':');
@@ -52,8 +55,8 @@ for (let h = START_HOUR; h <= END_HOUR; h++) {
 }
 
 const EMPTY_FORM: BookingForm = {
-  departmentId: departments[0]?.id ?? '',
-  userId: users[0]?.id ?? '',
+  departmentId: '',
+  userId: '',
   description: '',
   date: today,
   startTime: '09:00',
@@ -86,12 +89,40 @@ const CARD_COLORS = [
   { bg: 'bg-teal-50', border: 'border-teal-100', dot: 'bg-teal-500', text: 'text-teal-600' },
 ];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page 
 export default function AddBookingPage() {
   const router = useRouter();
+  const { currentUser } = useAuthStore();
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
   const [calView, setCalView] = useState<CalView>('Day');
   const [calDate, setCalDate] = useState(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [todaysBookings, setTodaysBookings] = useState<Booking[]>([]);
+  const [deptsList, setDeptsList] = useState<Department[]>([]);
+
+  useEffect(() => {
+    getDepartments().then((list) => {
+      setDeptsList(list);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      setForm((prev) => ({
+        ...prev,
+        userId: String(currentUser.id),
+        departmentId: prev.departmentId || String(currentUser.departmentId) || '',
+      }));
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const dateStr = format(calDate, 'yyyy-MM-dd');
+    getBookingsByDateAction(dateStr).then((result) => {
+      if (result.success) setTodaysBookings(result.bookings ?? []);
+    });
+  }, [calDate]);
 
   const fieldVal = (f: Partial<BookingForm>) => {
     setForm((prev) => {
@@ -105,13 +136,8 @@ export default function AddBookingPage() {
     });
   };
 
-  // ─── Today's bookings for right panel 
-  const todaysBookings = useMemo(() => {
-    const dateStr = format(calDate, 'yyyy-MM-dd');
-    return allBookings.filter((b) => b.date === dateStr);
-  }, [calDate]);
-
   const calDateLabel = format(calDate, 'MMM d, yyyy');
+
 
   const shiftDate = (delta: number) => {
     setCalDate((prev) => {
@@ -123,19 +149,41 @@ export default function AddBookingPage() {
 
   const goToday = () => setCalDate(new Date());
 
-  // ─── Submit ─────────────────────────────────────────────────────────────
-  const handleSubmit = (e: React.FormEvent) => {
+  // ─── Submit 
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.description.trim()) return;
-    // In a real app: persist the booking here
-    router.push('/admin/manage-bookings');
+    setSubmitError('');
+    if (!form.description.trim()) {
+      setSubmitError('Description is required.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await createBookingAction({
+        departmentId: form.departmentId,
+        description: form.description,
+        date: form.date,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        userId: form.userId,
+      });
+      if (!result.success) {
+        setSubmitError(result.error ?? 'Failed to create booking.');
+        return;
+      }
+      router.push('/admin/manage-bookings');
+    } catch {
+      setSubmitError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     router.push('/admin/manage-bookings');
   };
 
-  // ─── Render ─────────────────────────────────────────────────────────────
+  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
@@ -155,7 +203,7 @@ export default function AddBookingPage() {
       {/* Two-panel layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* ── LEFT PANEL: Form ───────────────────────────────────────────── */}
+        {/* ── LEFT PANEL: Form ─────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Card header */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-50">
@@ -163,6 +211,12 @@ export default function AddBookingPage() {
           </div>
 
           <form onSubmit={handleSubmit} id="add-booking-form" noValidate className="p-6 space-y-5">
+            {/* Error banner */}
+            {submitError && (
+              <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl">
+                {submitError}
+              </div>
+            )}
 
             {/* Date */}
             <div className="space-y-1.5">
@@ -254,13 +308,13 @@ export default function AddBookingPage() {
                     backgroundPosition: 'right 12px center',
                   }}
                 >
-                  {departments.map((d) => (
+                  {deptsList.map((d) => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
               </div>
             </div>
-            
+
             {/* Description */}
             <div className="space-y-1.5">
               <label htmlFor="ab-description" className="block text-sm font-medium text-gray-700">
@@ -294,13 +348,24 @@ export default function AddBookingPage() {
               <button
                 type="submit"
                 id="submit-add-booking-btn"
-                className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
                   boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
                 }}
               >
-                Book Meeting
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  'Book Meeting'
+                )}
               </button>
             </div>
           </form>
