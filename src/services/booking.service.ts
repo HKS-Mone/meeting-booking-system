@@ -186,7 +186,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     if (overlappingBooking) {
       return {
         success: false,
-        error: `Selected date and time overlaps with booking ${bookingCode(overlappingBooking.id)}.`,
+        error: `This date and time slot has already been booked`,
       };
     }
 

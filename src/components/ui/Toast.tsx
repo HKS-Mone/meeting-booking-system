@@ -48,7 +48,7 @@ export default function Toast({ message, type = 'info', onClose, duration = 4000
   return (
     <div
       className={`
-        fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg
+        flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg
         transition-all duration-300
         ${styles[type]}
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
@@ -88,7 +88,7 @@ export const useToastStore = create<ToastState>((set) => ({
 export function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
       {toasts.map((t) => (
         <Toast
           key={t.id}

@@ -10,6 +10,7 @@ import {
   getBookingsByDateAction,
 } from '@/services/booking.service';
 import { getDepartments } from '@/services/user.service';
+import { useToastStore } from '@/components/ui/Toast';
 import type { Booking, Department } from '@/lib/types';
 import {
   ArrowLeft,
@@ -75,10 +76,10 @@ const CARD_COLORS = [
 export default function AddBookingPage() {
   const router = useRouter();
   const { currentUser, isCheckingSession } = useAuth();
+  const addToast = useToastStore((state) => state.addToast);
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
   const [calDate, setCalDate] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
   const [todaysBookings, setTodaysBookings] = useState<Booking[]>([]);
   const [deptsList, setDeptsList] = useState<Department[]>([]);
   const canUsePage = !isCheckingSession && Boolean(currentUser);
@@ -147,7 +148,6 @@ export default function AddBookingPage() {
   // ─── Submit 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError('');
 
     if (!canUsePage || !currentUser) {
       router.replace('/login');
@@ -155,7 +155,7 @@ export default function AddBookingPage() {
     }
 
     if (!selectedDepartmentId) {
-      setSubmitError('Please select a department.');
+      addToast('Please select a department.', 'error');
       return;
     }
 
@@ -170,12 +170,13 @@ export default function AddBookingPage() {
         userId: String(currentUser.id),
       });
       if (!result.success) {
-        setSubmitError(result.error ?? 'Failed to create booking.');
+        addToast(result.error ?? 'Failed to create booking.', 'error');
         return;
       }
+      addToast('Booking created successfully.', 'success');
       router.push('/admin/manage-bookings');
     } catch {
-      setSubmitError('An unexpected error occurred. Please try again.');
+      addToast('An unexpected error occurred. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -225,13 +226,6 @@ export default function AddBookingPage() {
           </div>
 
           <form onSubmit={handleSubmit} id="add-booking-form" noValidate className="p-6 space-y-5">
-            {/* Error banner */}
-            {submitError && (
-              <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl">
-                {submitError}
-              </div>
-            )}
-
             {/* Date */}
             <div className="space-y-1.5">
               <label htmlFor="ab-date" className="block text-sm font-medium text-gray-700">
