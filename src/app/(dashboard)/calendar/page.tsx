@@ -59,9 +59,9 @@ export default function CalendarPage() {
           <button
             id="calendar-prev"
             onClick={() => setCurrentDate((d) => subMonths(d, 1))}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-11 h-11 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-base font-semibold text-gray-800 min-w-[160px] text-center">
             {formatMonthYear(currentDate)}
@@ -69,9 +69,9 @@ export default function CalendarPage() {
           <button
             id="calendar-next"
             onClick={() => setCurrentDate((d) => addMonths(d, 1))}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-11 h-11 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 

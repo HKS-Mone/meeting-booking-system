@@ -104,7 +104,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                 onClick={() => setSelectedDay(day)}
                 onKeyDown={(e) => e.key === 'Enter' && setSelectedDay(day)}
                 className={`
-                  min-h-[60px] sm:min-h-[100px] p-1 sm:p-1.5 cursor-pointer
+                  min-h-[60px] md:min-h-[110px] p-1 md:p-2 cursor-pointer
                   border-b border-r border-gray-50
                   transition-colors duration-100
                   ${!inMonth ? 'bg-gray-50/50 hover:bg-gray-100/60' : 'hover:bg-blue-50/40'}
@@ -115,8 +115,8 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                 <div className="flex justify-end mb-0.5">
                   <span
                     className={`
-                      w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
-                      text-[10px] sm:text-xs font-medium select-none
+                      w-5 h-5 md:w-7 md:h-7 flex items-center justify-center rounded-full
+                      text-[10px] md:text-sm font-medium select-none
                       ${todayDay
                         ? 'bg-blue-600 text-white'
                         : inMonth ? 'text-gray-700' : 'text-gray-300'
@@ -205,11 +205,11 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
               <button
                 id="day-popup-close-btn"
                 onClick={handleClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200 shrink-0 ml-4 hover:rotate-90"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200 shrink-0 ml-4 hover:rotate-90"
                 style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), color 0.15s ease, background 0.15s ease' }}
                 aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 

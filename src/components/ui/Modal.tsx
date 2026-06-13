@@ -12,10 +12,10 @@ interface ModalProps {
 }
 
 const sizeClasses = {
-  sm: 'sm:max-w-sm',
-  md: 'sm:max-w-md',
-  lg: 'sm:max-w-lg',
-  xl: 'sm:max-w-2xl',
+  sm: 'sm:max-w-sm md:max-w-md',
+  md: 'sm:max-w-md md:max-w-lg',
+  lg: 'sm:max-w-lg md:max-w-2xl',
+  xl: 'sm:max-w-2xl md:max-w-4xl',
 };
 
 export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
@@ -77,10 +77,10 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           <h2 className="text-base font-semibold text-gray-800">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-150 hover:rotate-90 hover:scale-110"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-150 hover:rotate-90 hover:scale-110"
             style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), background 0.15s ease, color 0.15s ease' }}
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 

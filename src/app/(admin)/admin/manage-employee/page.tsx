@@ -209,7 +209,6 @@ export default function ManageUsersPage() {
   const {
     users,
     departments,
-    error: apiError,
     loadUsers,
     loadDepartments,
     createUser,
@@ -289,8 +288,10 @@ export default function ManageUsersPage() {
       });
       setShowPassword(false);
       setEditUser(null);
+      addToast('Employee updated successfully.', 'success');
     } catch (err) {
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to update employee.';
+      addToast(message, 'error');
     }
   };
 
@@ -298,8 +299,10 @@ export default function ManageUsersPage() {
     try {
       await apiDeleteUser(u.id);
       setDeleteUser(null);
+      addToast('Employee deleted successfully.', 'success');
     } catch (err) {
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to delete employee.';
+      addToast(message, 'error');
     }
   };
 
@@ -337,10 +340,10 @@ export default function ManageUsersPage() {
         <button
           id="add-user-btn"
           onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
+          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
           style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4.5 h-4.5" />
           Add Employee
         </button>
       </div>
@@ -370,11 +373,11 @@ export default function ManageUsersPage() {
             </div>
             <div className="flex gap-2 pt-1 border-t border-gray-50">
               <button id={`edit-user-${u.id}`} onClick={() => openEdit(u)}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
+                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
                 Edit
               </button>
               <button id={`delete-user-${u.id}`} onClick={() => setDeleteUser(u)}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
                 Delete
               </button>
             </div>
@@ -404,7 +407,7 @@ export default function ManageUsersPage() {
             <tbody className="divide-y divide-gray-50">
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-blue-50/30 transition-colors group">
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5 md:py-4">
                     <div className="flex items-center gap-2.5">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
@@ -415,31 +418,31 @@ export default function ManageUsersPage() {
                       <span className="font-medium text-gray-800">{u.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5 md:py-4 text-gray-500 text-xs">{u.email}</td>
+                  <td className="px-4 py-3.5 md:py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                       {u.role === 'ADMIN' ? 'Admin' : 'Employee'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 text-sm">{u.department?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-400 whitespace-nowrap text-xs">{formatDate(u.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                  <td className="px-4 py-3.5 md:py-4 text-gray-600 text-sm">{u.department?.name ?? '—'}</td>
+                  <td className="px-4 py-3.5 md:py-4 text-gray-400 whitespace-nowrap text-xs">{formatDate(u.createdAt)}</td>
+                  <td className="px-4 py-3.5 md:py-4">
+                    <div className="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                       <button
                         id={`edit-user-${u.id}`}
                         onClick={() => openEdit(u)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors"
                         title="Edit user"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-4.5 h-4.5" />
                       </button>
                       <button
                         id={`delete-user-${u.id}`}
                         onClick={() => setDeleteUser(u)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
                         title="Delete user"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4.5 h-4.5" />
                       </button>
                     </div>
                   </td>
@@ -529,13 +532,13 @@ export default function ManageUsersPage() {
               Are you sure you want to permanently delete <span className="font-semibold text-gray-800">{deleteUser.name}</span>?
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteUser(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+              <button onClick={() => setDeleteUser(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
               <button
                 id={`confirm-delete-user-${deleteUser.id}`}
                 onClick={() => handleDelete(deleteUser)}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
               >
                 Delete User
               </button>

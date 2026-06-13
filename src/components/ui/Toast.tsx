@@ -75,11 +75,12 @@ export default function Toast({ message, type = 'info', onClose, duration = 4000
     <div
       className={`
         relative flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl overflow-hidden
+        w-[300px] md:w-[320px] max-w-full
         ${s.wrap}
         ${phase === 'in'  ? 'animate-toast-in' : ''}
         ${phase === 'out' ? 'animate-toast-out' : ''}
       `}
-      style={{ minWidth: '300px', maxWidth: '400px' }}
+      style={{ maxWidth: '400px' }}
     >
       {/* Coloured left accent bar */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${s.accent}`} />
@@ -93,9 +94,9 @@ export default function Toast({ message, type = 'info', onClose, duration = 4000
       {/* Close */}
       <button
         onClick={dismiss}
-        className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors mt-0.5"
+        className="shrink-0 w-10 h-10 -mr-2 -mt-2 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all active:scale-95"
       >
-        <X className="w-4 h-4" />
+        <X className="w-5 h-5" />
       </button>
 
       {/* Progress bar — sweeps from full to empty over `duration` ms */}

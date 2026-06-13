@@ -202,3 +202,27 @@
 /* Hide scrollbar for calendar cells on mobile */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─────────────────────────────────────────────────────────────
+   TABLET TOUCH OPTIMIZATION (768px - 1024px)
+   Enforces >= 44px touch targets on tablet viewport sizes
+───────────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Enforce min-height for finger taps */
+  button, 
+  [role="button"],
+  select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"] {
+    min-height: 44px;
+  }
+
+  /* Larger scrollbar track for finger manipulation */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}
+

@@ -174,7 +174,7 @@ export default function ManageBookingsPage() {
   };
 
   // ─── Input style ──────────────────────────
-  const inputCls = 'w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200';
+  const inputCls = 'w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200';
   const selectCls = `${inputCls} pr-8 appearance-none bg-white`;
   const selectBg = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -195,7 +195,7 @@ export default function ManageBookingsPage() {
             type="text"
             disabled
             value={editBooking?.department?.name ?? 'Department'}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
             locked
@@ -213,7 +213,7 @@ export default function ManageBookingsPage() {
             type="text"
             value={editBooking?.user?.name ?? 'Admin User'}
             disabled
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
             locked
@@ -316,7 +316,7 @@ export default function ManageBookingsPage() {
         <button
           id="add-booking-btn"
           onClick={() => router.push('/admin/manage-bookings/add-booking')}
-          className="group flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95 btn-press"
+          className="group flex items-center gap-2 px-5 py-2.5 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95 btn-press"
         >
           <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
           New Booking
@@ -332,7 +332,7 @@ export default function ManageBookingsPage() {
           placeholder="Search by booking ID, description or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
+          className="w-full pl-10 pr-4 py-3 md:py-3.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
         />
       </div>
 
@@ -366,14 +366,14 @@ export default function ManageBookingsPage() {
                 <button
                   id={`edit-booking-${b.id}`}
                   onClick={() => openEdit(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-150 active:scale-95"
+                  className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-150 active:scale-95"
                 >
                   Edit
                 </button>
                 <button
                   id={`delete-booking-${b.id}`}
                   onClick={() => setDeleteBooking(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-150 active:scale-95"
+                  className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-150 active:scale-95"
                 >
                   Delete
                 </button>
@@ -425,31 +425,31 @@ export default function ManageBookingsPage() {
                       className={`hover:bg-blue-50/40 transition-colors duration-150 ${staggerClass()}`}
                       style={staggerStyle(idx, 30)}
                     >
-                      <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
-                      <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
+                      <td className="px-4 py-3.5 md:py-4 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600">{b.department?.name}</td>
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600 whitespace-nowrap text-xs">
                         <div>{formatDate(b.date)}</div>
                         <div className="text-gray-400">{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
-                      <td className="px-4 py-3"><MeetingStatusBadge status={status} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1.5">
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
+                      <td className="px-4 py-3.5 md:py-4"><MeetingStatusBadge status={status} /></td>
+                      <td className="px-4 py-3.5 md:py-4">
+                        <div className="flex gap-2">
                           <button
                             id={`edit-booking-${b.id}`}
                             onClick={() => openEdit(b)}
-                            className="group w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-150 active:scale-90"
+                            className="group w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-150 active:scale-90"
                             title="Edit"
                           >
-                            <Pencil className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
+                            <Pencil className="w-4.5 h-4.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
                           <button
                             id={`delete-booking-${b.id}`}
                             onClick={() => setDeleteBooking(b)}
-                            className="group w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-100 hover:text-red-700 transition-all duration-150 active:scale-90"
+                            className="group w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-100 hover:text-red-700 transition-all duration-150 active:scale-90"
                             title="Delete"
                           >
-                            <Trash2 className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
+                            <Trash2 className="w-4.5 h-4.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
                         </div>
                       </td>
@@ -470,7 +470,7 @@ export default function ManageBookingsPage() {
             <button
               onClick={() => setEditBooking(null)}
               disabled={isSaving}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
             >
               Cancel
             </button>
@@ -478,7 +478,7 @@ export default function ManageBookingsPage() {
               id="save-edit-booking-btn"
               onClick={handleEdit}
               disabled={isSaving}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? (
                 <span className="flex items-center justify-center gap-2">
@@ -504,7 +504,7 @@ export default function ManageBookingsPage() {
               <button
                 onClick={() => setDeleteBooking(null)}
                 disabled={isSaving}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
               >
                 Cancel
               </button>
@@ -512,7 +512,7 @@ export default function ManageBookingsPage() {
                 id={`confirm-delete-booking-${deleteBooking.id}`}
                 onClick={() => handleDelete(deleteBooking)}
                 disabled={isSaving}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md hover:shadow-red-200"
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md hover:shadow-red-200"
               >
                 {isSaving ? (
                   <span className="flex items-center justify-center gap-2">

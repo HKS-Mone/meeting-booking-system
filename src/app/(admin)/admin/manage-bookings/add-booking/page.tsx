@@ -72,7 +72,6 @@ const CARD_COLORS = [
   { bg: 'bg-teal-50', border: 'border-teal-100', dot: 'bg-teal-500', text: 'text-teal-600' },
 ];
 
-// ─── Page 
 export default function AddBookingPage() {
   const router = useRouter();
   const { currentUser, isCheckingSession } = useAuth();
@@ -144,7 +143,6 @@ export default function AddBookingPage() {
   const selectedDepartmentId =
     form.departmentId || currentUser?.departmentId || deptsList[0]?.id || '';
 
-
   const shiftDate = (delta: number) => {
     setCalDate((prev) => {
       const d = new Date(prev);
@@ -155,7 +153,6 @@ export default function AddBookingPage() {
 
   const goToday = () => setCalDate(new Date());
 
-  // ─── Submit 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -211,7 +208,6 @@ export default function AddBookingPage() {
     router.push('/admin/manage-bookings');
   };
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   if (isCheckingSession) {
     return (
       <div className="flex min-h-[280px] items-center justify-center text-sm text-gray-500">
@@ -263,7 +259,7 @@ export default function AddBookingPage() {
                   type="date"
                   value={form.date}
                   onChange={(e) => fieldVal({ date: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -280,7 +276,7 @@ export default function AddBookingPage() {
                     id="ab-start"
                     value={form.startTime}
                     onChange={(e) => fieldVal({ startTime: e.target.value })}
-                    className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
+                    className="w-full pl-10 pr-8 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                       backgroundRepeat: 'no-repeat',
@@ -306,7 +302,7 @@ export default function AddBookingPage() {
                     id="ab-end"
                     value={form.endTime}
                     onChange={(e) => fieldVal({ endTime: e.target.value })}
-                    className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
+                    className="w-full pl-10 pr-8 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                       backgroundRepeat: 'no-repeat',
@@ -334,7 +330,7 @@ export default function AddBookingPage() {
                   id="ab-department"
                   value={selectedDepartmentId}
                   onChange={(e) => fieldVal({ departmentId: e.target.value })}
-                  className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
+                  className="w-full pl-10 pr-8 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
@@ -363,11 +359,10 @@ export default function AddBookingPage() {
                   placeholder="Enter meeting description..."
                   maxLength={250}
                   required={false}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
-
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">
@@ -375,7 +370,7 @@ export default function AddBookingPage() {
                 type="button"
                 id="cancel-add-booking-btn"
                 onClick={handleCancel}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -383,7 +378,7 @@ export default function AddBookingPage() {
                 type="submit"
                 id="submit-add-booking-btn"
                 disabled={isSubmitting || !canUsePage}
-                className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl text-white text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
                   boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
@@ -416,28 +411,28 @@ export default function AddBookingPage() {
               </div>
 
               {/* Calendar nav */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   id="cal-prev-btn"
                   onClick={() => shiftDate(-1)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+                  <ChevronLeft className="w-5 h-5 text-gray-500" />
                 </button>
                 <button
                   type="button"
                   id="cal-next-btn"
                   onClick={() => shiftDate(1)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                  <ChevronRight className="w-5 h-5 text-gray-500" />
                 </button>
                 <button
                   type="button"
                   id="cal-today-btn"
                   onClick={goToday}
-                  className="px-3 py-1 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-600"
+                  className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-600"
                 >
                   Today
                 </button>
@@ -446,7 +441,7 @@ export default function AddBookingPage() {
           </div>
 
           {/* Bookings list */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5 max-h-[560px]">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 max-h-[560px]">
             {todaysBookings.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-center">
                 <CalendarDays className="w-8 h-8 text-gray-200 mb-2" />
@@ -458,7 +453,7 @@ export default function AddBookingPage() {
                 return (
                   <div
                     key={b.id}
-                    className={`flex items-start gap-3 p-4 rounded-xl border ${color.bg} ${color.border} group`}
+                    className={`flex items-start gap-3 p-5 rounded-xl border ${color.bg} ${color.border} group`}
                   >
                     {/* Time label */}
                     <div className="shrink-0 text-xs text-gray-400 w-14 pt-0.5 leading-tight">
