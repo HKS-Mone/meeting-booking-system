@@ -6,6 +6,15 @@ const bookingInclude = {
   department: true,
 } satisfies Prisma.BookingInclude;
 
+function dateRangeForDay(date: Date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
 export class BookingRepository {
 
   static async findAll() {
@@ -33,10 +42,7 @@ export class BookingRepository {
 
   static async findByDate(date: Date) {
     // Match bookings whose `date` field falls on the same calendar day
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
+    const { start, end } = dateRangeForDay(date);
 
     return prisma.booking.findMany({
       where: {
@@ -49,6 +55,27 @@ export class BookingRepository {
   }
 
   // ── Write ─────────────────────────────────────────────────────────────────
+
+  static async findOverlapping(
+    date: Date,
+    startTime: Date,
+    endTime: Date,
+    excludeBookingId?: number,
+  ) {
+    const { start, end } = dateRangeForDay(date);
+
+    return prisma.booking.findFirst({
+      where: {
+        isActive: true,
+        id: excludeBookingId === undefined ? undefined : { not: excludeBookingId },
+        date: { gte: start, lte: end },
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+      },
+      include: bookingInclude,
+      orderBy: { startTime: 'asc' },
+    });
+  }
 
   static async create(data: Prisma.BookingUncheckedCreateInput) {
     return prisma.booking.create({

@@ -63,6 +63,19 @@ function buildDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time}:00`);
 }
 
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function dateTimeToMinutes(time: Date): number {
+  return time.getUTCHours() * 60 + time.getUTCMinutes();
+}
+
+function bookingCode(id: number): string {
+  return `BK-${String(id).padStart(4, '0')}`;
+}
+
 function normalizeDescription(description?: string): string | null {
   const value = description?.trim();
   return value ? value : null;
@@ -150,7 +163,7 @@ export async function getBookingsByDateAction(dateStr: string): Promise<Bookings
   }
 }
 
-/** Create a new booking on behalf of the logged-in user. */
+/** Create a new booking */
 export async function createBookingAction(input: CreateBookingInput): Promise<BookingResult> {
   try {
     const sessionUserId = await getAuthenticatedUserId();
@@ -158,12 +171,24 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
 
     if (!input.date) return { success: false, error: 'Date is required.' };
     if (!input.startTime || !input.endTime) return { success: false, error: 'Start and end time are required.' };
-    if (input.startTime >= input.endTime) return { success: false, error: 'End time must be after start time.' };
 
     const date = new Date(input.date);
+    if (isNaN(date.getTime())) return { success: false, error: 'Invalid date.' };
+    if (timeToMinutes(input.startTime) >= timeToMinutes(input.endTime)) {
+      return { success: false, error: 'End time must be after start time.' };
+    }
+
     const startTime = buildDateTime(input.date, input.startTime);
     const endTime = buildDateTime(input.date, input.endTime);
     const targetUserId = input.userId ? Number(input.userId) : sessionUserId;
+    const overlappingBooking = await BookingRepository.findOverlapping(date, startTime, endTime);
+
+    if (overlappingBooking) {
+      return {
+        success: false,
+        error: `Selected date and time overlaps with booking ${bookingCode(overlappingBooking.id)}.`,
+      };
+    }
 
     const row = await BookingRepository.create({
       userId: targetUserId,
@@ -198,17 +223,39 @@ export async function updateBookingAction(
 
     // Resolve date and time changes together so we can validate the pair
     const dateStr = input.date ?? existing.date.toISOString().slice(0, 10);
-    const startStr = input.startTime ?? existing.startTime.toISOString().slice(11, 16);
-    const endStr = input.endTime ?? existing.endTime.toISOString().slice(11, 16);
-    const nextStartTime = buildDateTime(dateStr, startStr);
-    const nextEndTime = buildDateTime(dateStr, endStr);
+    const nextStartTime = input.startTime ? buildDateTime(dateStr, input.startTime) : existing.startTime;
+    const nextEndTime = input.endTime ? buildDateTime(dateStr, input.endTime) : existing.endTime;
+    const nextDate = new Date(dateStr);
 
-    if (input.date) data.date = new Date(input.date);
-    if (input.startTime || input.date) data.startTime = nextStartTime;
-    if (input.endTime || input.date) data.endTime = nextEndTime;
+    if (isNaN(nextDate.getTime())) return { success: false, error: 'Invalid date.' };
 
-    if (nextStartTime >= nextEndTime) {
+    if (input.date) data.date = nextDate;
+    if (input.startTime) data.startTime = nextStartTime;
+    if (input.endTime) data.endTime = nextEndTime;
+
+    if (
+      input.startTime &&
+      input.endTime &&
+      timeToMinutes(input.startTime) >= timeToMinutes(input.endTime)
+    ) {
       return { success: false, error: 'End time must be after start time.' };
+    }
+
+    if (dateTimeToMinutes(nextStartTime) >= dateTimeToMinutes(nextEndTime)) {
+      return { success: false, error: 'End time must be after start time.' };
+    }
+
+    const overlappingBooking = await BookingRepository.findOverlapping(
+      nextDate,
+      nextStartTime,
+      nextEndTime,
+      Number(id),
+    );
+    if (overlappingBooking) {
+      return {
+        success: false,
+        error: `Selected date and time overlaps with booking ${bookingCode(overlappingBooking.id)}.`,
+      };
     }
 
     const row = await BookingRepository.update(Number(id), data);
