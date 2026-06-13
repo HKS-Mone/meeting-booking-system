@@ -31,12 +31,24 @@ interface BookingForm {
 }
 
 const today = format(new Date(), 'yyyy-MM-dd');
+const START_HOUR = 6;  
+const END_HOUR   = 19; 
 
-function formatHourLabel(i: number): string {
-  if (i === 0) return '05:00 AM';
-  if (i < 12) return `${i}:00 AM`;
-  if (i === 12) return '12:00 PM';
-  return `${i - 12}:00 PM`;
+function formatSlotLabel(slot: string): string {
+  const [hStr, mStr] = slot.split(':');
+  const h = parseInt(hStr);
+  const m = mStr === '30' ? '30' : '00';
+  const suffix = h < 12 ? 'AM' : 'PM';
+  const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${display}:${m} ${suffix}`;
+}
+
+const TIME_SLOTS: string[] = [];
+for (let h = START_HOUR; h <= END_HOUR; h++) {
+  TIME_SLOTS.push(String(h).padStart(2, '0') + ':00');
+  if (h < END_HOUR) {
+    TIME_SLOTS.push(String(h).padStart(2, '0') + ':30');
+  }
 }
 
 const EMPTY_FORM: BookingForm = {
@@ -48,10 +60,10 @@ const EMPTY_FORM: BookingForm = {
   endTime: '10:00',
 };
 
-// ─── Calendar view type ───────────────────────────────────────────────────────
+// ─── Calendar view type 
 type CalView = 'Day' | 'Week' | 'Month';
 
-// ─── Dot colour per meeting index ─────────────────────────────────────────────
+// ─── Dot colour per meeting index 
 const DOT_COLORS = [
   'bg-blue-500',
   'bg-green-500',
@@ -81,10 +93,19 @@ export default function AddBookingPage() {
   const [calView, setCalView] = useState<CalView>('Day');
   const [calDate, setCalDate] = useState(new Date());
 
-  const fieldVal = (f: Partial<BookingForm>) =>
-    setForm((prev) => ({ ...prev, ...f }));
+  const fieldVal = (f: Partial<BookingForm>) => {
+    setForm((prev) => {
+      const next = { ...prev, ...f };
+      if (next.startTime >= next.endTime) {
+        const startIdx = TIME_SLOTS.indexOf(next.startTime);
+        const nextIdx = Math.min(startIdx + 1, TIME_SLOTS.length - 1);
+        next.endTime = TIME_SLOTS[nextIdx];
+      }
+      return next;
+    });
+  };
 
-  // ─── Today's bookings for right panel ───────────────────────────────────
+  // ─── Today's bookings for right panel 
   const todaysBookings = useMemo(() => {
     const dateStr = format(calDate, 'yyyy-MM-dd');
     return allBookings.filter((b) => b.date === dateStr);
@@ -179,14 +200,11 @@ export default function AddBookingPage() {
                       backgroundPosition: 'right 12px center',
                     }}
                   >
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hh = String(i).padStart(2, '0');
-                      return (
-                        <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {formatHourLabel(i)}
-                        </option>
-                      );
-                    })}
+                    {TIME_SLOTS.slice(0, -1).map((slot) => (
+                      <option key={slot} value={slot}>
+                        {formatSlotLabel(slot)}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -208,14 +226,11 @@ export default function AddBookingPage() {
                       backgroundPosition: 'right 12px center',
                     }}
                   >
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hh = String(i).padStart(2, '0');
-                      return (
-                        <option key={`${hh}:00`} value={`${hh}:00`}>
-                          {formatHourLabel(i)}
-                        </option>
-                      );
-                    })}
+                    {TIME_SLOTS.map((slot) => (
+                      <option key={slot} value={slot}>
+                        {formatSlotLabel(slot)}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
