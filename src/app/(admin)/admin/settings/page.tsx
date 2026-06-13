@@ -32,7 +32,6 @@ export default function AdminSettingsPage() {
 
     const addToast = useToastStore((state) => state.addToast);
     const [loading, setLoading] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
 
     const [form, setForm] = useState({
         currentPassword: '',
@@ -55,29 +54,28 @@ export default function AdminSettingsPage() {
         if (!form.confirmPassword) e.confirmPassword = 'Confirm password is required';
         else if (form.confirmPassword !== form.newPassword) e.confirmPassword = 'Passwords do not match';
         setErrors(e);
-        return Object.keys(e).length === 0;
+        const firstError = Object.values(e)[0];
+        if (firstError) addToast(firstError, 'error');
+        return !firstError;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
         setLoading(true);
-        setErrorMsg('');
         try {
             const result = await updatePassword(form.currentPassword, form.newPassword);
             if (result.success) {
                 addToast('Password updated successfully!', 'success');
                 setSubmitted(true);
             } else {
-                setErrorMsg(result.error ?? 'Failed to update password.');
                 addToast(result.error ?? 'Failed to update password.', 'error');
                 if (result.error?.toLowerCase().includes('current password')) {
                     setErrors({ currentPassword: result.error });
                 }
             }
-        } catch (err: any) {
-            const msg = err.message || 'An error occurred while updating the password.';
-            setErrorMsg(msg);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'An error occurred while updating the password.';
             addToast(msg, 'error');
         } finally {
             setLoading(false);
@@ -91,7 +89,6 @@ export default function AdminSettingsPage() {
             confirmPassword: '',
         });
         setErrors({});
-        setErrorMsg('');
         setSubmitted(false);
     };
 
@@ -201,11 +198,6 @@ export default function AdminSettingsPage() {
             >
 
                 <div className="p-6 space-y-6">
-                    {errorMsg && (
-                        <div className="p-4 text-sm text-red-700 bg-red-50 rounded-xl border border-red-100">
-                            {errorMsg}
-                        </div>
-                    )}
                     {/* Row 1: Email + Current Password */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         {/* Email (read-only) */}

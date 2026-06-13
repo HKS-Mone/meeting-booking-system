@@ -10,6 +10,7 @@ import {
   Lock, Eye, EyeOff, AlertTriangle,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { useToastStore } from '@/components/ui/Toast';
 
 /* ── Types ──────────── */
 interface UserForm {
@@ -215,6 +216,7 @@ export default function ManageUsersPage() {
     updateUser,
     deleteUser: apiDeleteUser,
   } = useUser();
+  const addToast = useToastStore((state) => state.addToast);
 
   const [addOpen, setAddOpen]     = useState(false);
   const [editUser, setEditUser]   = useState<User | null>(null);
@@ -227,31 +229,51 @@ export default function ManageUsersPage() {
     loadDepartments();
   }, [loadUsers, loadDepartments]);
 
-  useEffect(() => {
-    if (departments.length > 0 && !form.departmentId && !editUser) {
-      setForm((prev) => ({ ...prev, departmentId: departments[0].id }));
-    }
-  }, [departments, form.departmentId, editUser]);
-
   const onChange = (f: Partial<UserForm>) => setForm((prev) => ({ ...prev, ...f }));
   const togglePw = () => setShowPassword((v) => !v);
+  const addForm = addOpen
+    ? { ...form, departmentId: form.departmentId || departments[0]?.id || '' }
+    : form;
 
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
-    if (!form.name.trim() || !form.email.trim() || form.password.length < 8) return;
+    const departmentId = form.departmentId || departments[0]?.id || '';
+
+    if (!form.name.trim()) {
+      addToast('Full name is required.', 'error');
+      return;
+    }
+
+    if (!form.email.trim()) {
+      addToast('Email address is required.', 'error');
+      return;
+    }
+
+    if (!departmentId) {
+      addToast('Please select a department.', 'error');
+      return;
+    }
+
+    if (form.password.length < 8) {
+      addToast('Password must be at least 8 characters.', 'error');
+      return;
+    }
+
     try {
       await createUser({
         name: form.name.trim(),
         email: form.email.trim(),
         role: form.role,
-        departmentId: form.departmentId || undefined,
+        departmentId,
         password: form.password,
       });
       setForm(EMPTY_FORM);
       setShowPassword(false);
       setAddOpen(false);
+      addToast('Employee created successfully.', 'success');
     } catch (err) {
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to create employee.';
+      addToast(message, 'error');
     }
   };
 
@@ -432,7 +454,7 @@ export default function ManageUsersPage() {
       <Modal open={addOpen} onClose={closeAdd} title="Add New User" size="xl">
         <div className="space-y-6">
           <UserFormFields
-            form={form}
+            form={addForm}
             onChange={onChange}
             showPassword={showPassword}
             onTogglePassword={togglePw}
