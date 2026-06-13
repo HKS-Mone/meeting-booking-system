@@ -50,14 +50,7 @@ export class BookingRepository {
 
   // ── Write ─────────────────────────────────────────────────────────────────
 
-  static async create(data: {
-    userId: number;
-    departmentId: number;
-    description: string;
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-  }) {
+  static async create(data: Prisma.BookingUncheckedCreateInput) {
     return prisma.booking.create({
       data: { ...data, isActive: true },
       include: bookingInclude,
@@ -66,13 +59,7 @@ export class BookingRepository {
 
   static async update(
     id: number,
-    data: Partial<{
-      departmentId: number;
-      description: string;
-      date: Date;
-      startTime: Date;
-      endTime: Date;
-    }>,
+    data: Prisma.BookingUncheckedUpdateInput,
   ) {
     return prisma.booking.update({
       where: { id },

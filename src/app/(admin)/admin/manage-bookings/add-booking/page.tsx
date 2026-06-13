@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatTime } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useAuthStore } from '@/lib/auth-store';
+import { useAuth } from '../../../../../../hook/useAuth';
 import {
   createBookingAction,
   getBookingsByDateAction,
@@ -20,13 +20,11 @@ import {
   ChevronRight,
   MoreVertical,
   Building2,
-  User,
 } from 'lucide-react';
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 interface BookingForm {
   departmentId: string;
-  userId: string;
   description: string;
   date: string;
   startTime: string;
@@ -56,27 +54,11 @@ for (let h = START_HOUR; h <= END_HOUR; h++) {
 
 const EMPTY_FORM: BookingForm = {
   departmentId: '',
-  userId: '',
   description: '',
   date: today,
   startTime: '09:00',
   endTime: '10:00',
 };
-
-// ─── Calendar view type 
-type CalView = 'Day' | 'Week' | 'Month';
-
-// ─── Dot colour per meeting index 
-const DOT_COLORS = [
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-purple-500',
-  'bg-orange-400',
-  'bg-cyan-500',
-  'bg-pink-500',
-  'bg-indigo-500',
-  'bg-teal-500',
-];
 
 const CARD_COLORS = [
   { bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500', text: 'text-blue-600' },
@@ -92,37 +74,48 @@ const CARD_COLORS = [
 // ─── Page 
 export default function AddBookingPage() {
   const router = useRouter();
-  const { currentUser } = useAuthStore();
+  const { currentUser, isCheckingSession } = useAuth();
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
-  const [calView, setCalView] = useState<CalView>('Day');
   const [calDate, setCalDate] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [todaysBookings, setTodaysBookings] = useState<Booking[]>([]);
   const [deptsList, setDeptsList] = useState<Department[]>([]);
+  const canUsePage = !isCheckingSession && Boolean(currentUser);
 
   useEffect(() => {
-    getDepartments().then((list) => {
-      setDeptsList(list);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      setForm((prev) => ({
-        ...prev,
-        userId: String(currentUser.id),
-        departmentId: prev.departmentId || String(currentUser.departmentId) || '',
-      }));
+    if (isCheckingSession) return;
+    if (!canUsePage || !currentUser) {
+      router.replace('/login');
     }
-  }, [currentUser]);
+  }, [canUsePage, currentUser, isCheckingSession, router]);
 
   useEffect(() => {
+    if (!canUsePage) return;
+    let ignore = false;
+
+    getDepartments().then((list) => {
+      if (!ignore) setDeptsList(list);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [canUsePage]);
+
+  useEffect(() => {
+    if (!canUsePage) return;
+    let ignore = false;
+
     const dateStr = format(calDate, 'yyyy-MM-dd');
     getBookingsByDateAction(dateStr).then((result) => {
-      if (result.success) setTodaysBookings(result.bookings ?? []);
+      if (!ignore && result.success) setTodaysBookings(result.bookings ?? []);
     });
-  }, [calDate]);
+
+    return () => {
+      ignore = true;
+    };
+  }, [calDate, canUsePage]);
 
   const fieldVal = (f: Partial<BookingForm>) => {
     setForm((prev) => {
@@ -137,6 +130,8 @@ export default function AddBookingPage() {
   };
 
   const calDateLabel = format(calDate, 'MMM d, yyyy');
+  const selectedDepartmentId =
+    form.departmentId || currentUser?.departmentId || deptsList[0]?.id || '';
 
 
   const shiftDate = (delta: number) => {
@@ -153,19 +148,26 @@ export default function AddBookingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
-    if (!form.description.trim()) {
-      setSubmitError('Description is required.');
+
+    if (!canUsePage || !currentUser) {
+      router.replace('/login');
       return;
     }
+
+    if (!selectedDepartmentId) {
+      setSubmitError('Please select a department.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await createBookingAction({
-        departmentId: form.departmentId,
+        departmentId: selectedDepartmentId,
         description: form.description,
         date: form.date,
         startTime: form.startTime,
         endTime: form.endTime,
-        userId: form.userId,
+        userId: String(currentUser.id),
       });
       if (!result.success) {
         setSubmitError(result.error ?? 'Failed to create booking.');
@@ -184,6 +186,18 @@ export default function AddBookingPage() {
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────
+  if (isCheckingSession) {
+    return (
+      <div className="flex min-h-[280px] items-center justify-center text-sm text-gray-500">
+        Loading booking form...
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
@@ -299,7 +313,7 @@ export default function AddBookingPage() {
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <select
                   id="ab-department"
-                  value={form.departmentId}
+                  value={selectedDepartmentId}
                   onChange={(e) => fieldVal({ departmentId: e.target.value })}
                   className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
                   style={{
@@ -329,6 +343,7 @@ export default function AddBookingPage() {
                   onChange={(e) => fieldVal({ description: e.target.value })}
                   placeholder="Enter meeting description..."
                   maxLength={250}
+                  required={false}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -348,7 +363,7 @@ export default function AddBookingPage() {
               <button
                 type="submit"
                 id="submit-add-booking-btn"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canUsePage}
                 className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',

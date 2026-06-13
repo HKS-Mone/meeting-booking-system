@@ -5,6 +5,14 @@ import { authCookie, serverAuthService } from '@/services/auth-server.service';
 import { BookingRepository } from '@/repository/booking.repository';
 import type { Booking } from '@/lib/types';
 
+type BookingUpdateData = {
+  departmentId?: number;
+  description?: string | null;
+  date?: Date;
+  startTime?: Date;
+  endTime?: Date;
+};
+
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export interface CreateBookingInput {
@@ -55,6 +63,21 @@ function buildDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time}:00`);
 }
 
+function normalizeDescription(description?: string): string | null {
+  const value = description?.trim();
+  return value ? value : null;
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
+
+function combineDateAndTime(date: Date, time: Date): Date {
+  const datePart = date.toISOString().slice(0, 10);
+  const timePart = time.toISOString().slice(11, 19);
+  return new Date(`${datePart}T${timePart}.000Z`);
+}
+
 /** Map a Prisma Booking row (with relations) to the app's Booking type. */
 function toSafeBooking(row: Awaited<ReturnType<typeof BookingRepository.findById>>): Booking {
   if (!row) throw new Error('Booking not found.');
@@ -80,10 +103,10 @@ function toSafeBooking(row: Awaited<ReturnType<typeof BookingRepository.findById
     department: row.department
       ? { id: String(row.department.id), name: row.department.name }
       : undefined,
-    purpose: row.description,
+    purpose: row.description ?? '',
     participants: 1,     // no participants column in schema yet
-    startTime: row.startTime.toISOString(),
-    endTime: row.endTime.toISOString(),
+    startTime: combineDateAndTime(row.date, row.startTime).toISOString(),
+    endTime: combineDateAndTime(row.date, row.endTime).toISOString(),
     date: row.date.toISOString().slice(0, 10),
     createdAt: row.createdAt.toISOString(),
   };
@@ -96,8 +119,8 @@ export async function getBookingsAction(): Promise<BookingsResult> {
   try {
     const rows = await BookingRepository.findAll();
     return { success: true, bookings: rows.map((r) => toSafeBooking(r)) };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to load bookings.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to load bookings.') };
   }
 }
 
@@ -109,8 +132,8 @@ export async function getMyBookingsAction(): Promise<BookingsResult> {
 
     const rows = await BookingRepository.findByUserId(userId);
     return { success: true, bookings: rows.map((r) => toSafeBooking(r)) };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to load bookings.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to load bookings.') };
   }
 }
 
@@ -122,8 +145,8 @@ export async function getBookingsByDateAction(dateStr: string): Promise<Bookings
 
     const rows = await BookingRepository.findByDate(date);
     return { success: true, bookings: rows.map((r) => toSafeBooking(r)) };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to load bookings.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to load bookings.') };
   }
 }
 
@@ -133,7 +156,6 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     const sessionUserId = await getAuthenticatedUserId();
     if (!sessionUserId) return { success: false, error: 'Unauthorized.' };
 
-    if (!input.description.trim()) return { success: false, error: 'Description is required.' };
     if (!input.date) return { success: false, error: 'Date is required.' };
     if (!input.startTime || !input.endTime) return { success: false, error: 'Start and end time are required.' };
     if (input.startTime >= input.endTime) return { success: false, error: 'End time must be after start time.' };
@@ -146,15 +168,15 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     const row = await BookingRepository.create({
       userId: targetUserId,
       departmentId: Number(input.departmentId),
-      description: input.description.trim(),
+      description: normalizeDescription(input.description),
       date,
       startTime,
       endTime,
     });
 
     return { success: true, booking: toSafeBooking(row) };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to create booking.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to create booking.') };
   }
 }
 
@@ -170,30 +192,29 @@ export async function updateBookingAction(
     const existing = await BookingRepository.findById(Number(id));
     if (!existing) return { success: false, error: 'Booking not found.' };
 
-    const data: Parameters<typeof BookingRepository.update>[1] = {};
+    const data: BookingUpdateData = {};
     if (input.departmentId !== undefined) data.departmentId = Number(input.departmentId);
-    if (input.description !== undefined) data.description = input.description.trim();
+    if (input.description !== undefined) data.description = normalizeDescription(input.description);
 
     // Resolve date and time changes together so we can validate the pair
     const dateStr = input.date ?? existing.date.toISOString().slice(0, 10);
     const startStr = input.startTime ?? existing.startTime.toISOString().slice(11, 16);
     const endStr = input.endTime ?? existing.endTime.toISOString().slice(11, 16);
+    const nextStartTime = buildDateTime(dateStr, startStr);
+    const nextEndTime = buildDateTime(dateStr, endStr);
 
     if (input.date) data.date = new Date(input.date);
-    if (input.startTime || input.date) data.startTime = buildDateTime(dateStr, startStr);
-    if (input.endTime || input.date) data.endTime = buildDateTime(dateStr, endStr);
+    if (input.startTime || input.date) data.startTime = nextStartTime;
+    if (input.endTime || input.date) data.endTime = nextEndTime;
 
-    if (
-      (data.startTime || data.endTime) &&
-      (data.startTime ?? existing.startTime) >= (data.endTime ?? existing.endTime)
-    ) {
+    if (nextStartTime >= nextEndTime) {
       return { success: false, error: 'End time must be after start time.' };
     }
 
     const row = await BookingRepository.update(Number(id), data);
     return { success: true, booking: toSafeBooking(row) };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to update booking.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to update booking.') };
   }
 }
 
@@ -208,7 +229,7 @@ export async function deleteBookingAction(id: string): Promise<{ success: boolea
 
     await BookingRepository.delete(Number(id));
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message ?? 'Failed to delete booking.' };
+  } catch (err: unknown) {
+    return { success: false, error: errorMessage(err, 'Failed to delete booking.') };
   }
 }
