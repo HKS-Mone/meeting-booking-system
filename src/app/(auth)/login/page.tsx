@@ -95,7 +95,7 @@ export default function LoginPage() {
         {/* Right panel — form */}
         <div className="w-full md:flex-1 flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 md:px-10" style={{ maxWidth: '460px' }}>
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center justify-center gap-2 mb-8">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center">
               <Calendar className="w-5 h-5 text-white" />
             </div>
@@ -105,8 +105,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
-          <p className="text-gray-500 text-sm mt-1 mb-8">Please login to your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h1>
+          <p className="text-gray-500 text-sm mt-1 mb-8 text-center">Please login to your account</p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* Error banner */}
@@ -159,19 +159,6 @@ export default function LoginPage() {
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-            </div>
-
-            {/* Remember */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                Remember me
-              </label>
             </div>
 
             {/* Submit */}
