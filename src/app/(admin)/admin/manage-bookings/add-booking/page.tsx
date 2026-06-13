@@ -95,14 +95,18 @@ export default function AddBookingPage() {
     if (!canUsePage) return;
     let ignore = false;
 
-    getDepartments().then((list) => {
-      if (!ignore) setDeptsList(list);
-    });
+    getDepartments()
+      .then((list) => {
+        if (!ignore) setDeptsList(list);
+      })
+      .catch(() => {
+        if (!ignore) addToast('Failed to load departments.', 'error');
+      });
 
     return () => {
       ignore = true;
     };
-  }, [canUsePage]);
+  }, [addToast, canUsePage]);
 
   useEffect(() => {
     if (!canUsePage) return;
@@ -110,13 +114,19 @@ export default function AddBookingPage() {
 
     const dateStr = format(calDate, 'yyyy-MM-dd');
     getBookingsByDateAction(dateStr).then((result) => {
-      if (!ignore && result.success) setTodaysBookings(result.bookings ?? []);
+      if (ignore) return;
+
+      if (result.success) {
+        setTodaysBookings(result.bookings ?? []);
+      } else {
+        addToast(result.error ?? 'Failed to load bookings.', 'error');
+      }
     });
 
     return () => {
       ignore = true;
     };
-  }, [calDate, canUsePage]);
+  }, [addToast, calDate, canUsePage]);
 
   const fieldVal = (f: Partial<BookingForm>) => {
     setForm((prev) => {
@@ -156,6 +166,21 @@ export default function AddBookingPage() {
 
     if (!selectedDepartmentId) {
       addToast('Please select a department.', 'error');
+      return;
+    }
+
+    if (!form.date) {
+      addToast('Please select a date.', 'error');
+      return;
+    }
+
+    if (!form.startTime || !form.endTime) {
+      addToast('Please select start and end time.', 'error');
+      return;
+    }
+
+    if (form.startTime >= form.endTime) {
+      addToast('End time must be after start time.', 'error');
       return;
     }
 
