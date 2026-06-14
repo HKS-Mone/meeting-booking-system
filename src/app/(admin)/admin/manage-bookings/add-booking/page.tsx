@@ -137,6 +137,9 @@ export default function AddBookingPage() {
       }
       return next;
     });
+    if (f.date) {
+      setCalDate(new Date(`${f.date}T00:00:00`));
+    }
   };
 
   const calDateLabel = format(calDate, 'MMM d, yyyy');
@@ -406,7 +409,7 @@ export default function AddBookingPage() {
           <div className="px-6 pt-6 pb-4 border-b border-gray-50">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-base font-bold text-gray-800">Today&apos;s Booked Meetings</h2>
+                <h2 className="text-base font-bold text-gray-800">Booked Meetings</h2>
                 <p className="text-xs text-gray-400 mt-0.5">{calDateLabel}</p>
               </div>
 
