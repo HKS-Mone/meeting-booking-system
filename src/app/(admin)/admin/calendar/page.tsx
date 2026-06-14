@@ -1,18 +1,54 @@
 'use client';
 
-import { useState } from 'react';
-import { getBookingsForMonth } from '@/lib/mock-data';
+import { useEffect, useMemo, useState } from 'react';
 import CalendarGrid from '@/components/calendar/CalendarGrid';
 import { formatMonthYear } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, subMonths } from 'date-fns';
+import type { Booking } from '@/lib/types';
+import { getBookingsAction } from '@/services/booking.service';
+import { useToastStore } from '@/components/ui/Toast';
 
 export default function AdminCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const addToast = useToastStore((state) => state.addToast);
 
-  const monthBookings = getBookingsForMonth(
-    currentDate.getFullYear(),
-    currentDate.getMonth()
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadBookings() {
+      setIsLoading(true);
+      const result = await getBookingsAction();
+      if (ignore) return;
+
+      if (result.success) {
+        setBookings(result.bookings ?? []);
+      } else {
+        addToast(result.error ?? 'Failed to load bookings.', 'error');
+      }
+
+      setIsLoading(false);
+    }
+
+    void loadBookings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [addToast]);
+
+  const monthBookings = useMemo(
+    () =>
+      bookings.filter((booking) => {
+        const bookingDate = new Date(booking.date);
+        return (
+          bookingDate.getFullYear() === currentDate.getFullYear() &&
+          bookingDate.getMonth() === currentDate.getMonth()
+        );
+      }),
+    [bookings, currentDate],
   );
 
   return (
@@ -23,9 +59,9 @@ export default function AdminCalendarPage() {
           <button
             id="admin-calendar-prev"
             onClick={() => setCurrentDate((d) => subMonths(d, 1))}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-11 h-11 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-base font-semibold text-gray-800 min-w-[160px] text-center">
             {formatMonthYear(currentDate)}
@@ -33,9 +69,9 @@ export default function AdminCalendarPage() {
           <button
             id="admin-calendar-next"
             onClick={() => setCurrentDate((d) => addMonths(d, 1))}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-11 h-11 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
@@ -55,6 +91,12 @@ export default function AdminCalendarPage() {
           </span>
         </div>
       </div>
+
+      {isLoading && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          Loading bookings...
+        </div>
+      )}
 
       {/* Calendar */}
       <CalendarGrid currentDate={currentDate} bookings={monthBookings} />

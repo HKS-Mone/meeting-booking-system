@@ -14,6 +14,7 @@ import {
     CheckCircle2,
     ChevronRight,
 } from 'lucide-react';
+import { useToastStore } from '@/components/ui/Toast';
 
 interface AdminForm {
     name: string;
@@ -46,31 +47,33 @@ export default function AddAdminPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof AdminForm, string>>>({});
+    const addToast = useToastStore((state) => state.addToast);
 
-    const { departments, loadDepartments, createUser} = useUser();
-
-    useEffect(() => {
-        loadDepartments();
-    }, [loadDepartments]);
+    const { departments, loadDepartments, createUser } = useUser();
 
     useEffect(() => {
-        if (departments.length > 0 && !form.departmentId) {
-            setForm((prev) => ({ ...prev, departmentId: departments[0].id }));
-        }
-    }, [departments, form.departmentId]);
+        loadDepartments().catch((err: unknown) => {
+            const message = err instanceof Error ? err.message : 'Failed to load departments.';
+            addToast(message, 'error');
+        });
+    }, [addToast, loadDepartments]);
 
     const set = (f: Partial<AdminForm>) => setForm((prev) => ({ ...prev, ...f }));
+    const formDepartmentId = form.departmentId || departments[0]?.id || '';
+    const displayForm = { ...form, departmentId: formDepartmentId };
 
     const validate = () => {
         const e: Partial<Record<keyof AdminForm, string>> = {};
         if (!form.name.trim()) e.name = 'Full name is required';
-        if (!form.departmentId) e.departmentId = 'Please select a department';
+        if (!formDepartmentId) e.departmentId = 'Please select a department';
         if (!form.email.trim()) e.email = 'Email is required';
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email address';
         if (!form.password) e.password = 'Password is required';
         else if (form.password.length < 8) e.password = 'Must be at least 8 characters';
         setErrors(e);
-        return Object.keys(e).length === 0;
+        const firstError = Object.values(e)[0];
+        if (firstError) addToast(firstError, 'error');
+        return !firstError;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -81,12 +84,15 @@ export default function AddAdminPage() {
                 name: form.name.trim(),
                 email: form.email.trim(),
                 role: 'ADMIN',
-                departmentId: form.departmentId || undefined,
+                departmentId: formDepartmentId,
                 password: form.password,
             });
+            addToast('Admin created successfully.', 'success');
             setSubmitted(true);
-        } catch (err: any) {
-            setErrors({ email: err?.message || 'Failed to create admin' });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to create admin.';
+            setErrors({ email: message });
+            addToast(message, 'error');
         }
     };
 
@@ -152,7 +158,7 @@ export default function AddAdminPage() {
                             </div>
                             <div className="text-xs text-gray-500 flex items-center gap-1.5 border-t border-gray-50 pt-3">
                                 <Building2 className="w-3.5 h-3.5" />
-                                {departments.find((d) => d.id === form.departmentId)?.name ?? '—'}
+                                {departments.find((d) => d.id === formDepartmentId)?.name ?? '—'}
                             </div>
                         </div>
                         <div className="flex gap-3 pt-1">
@@ -258,7 +264,7 @@ export default function AddAdminPage() {
                             </label>
                             <select
                                 id="admin-department"
-                                value={form.departmentId}
+                                value={displayForm.departmentId}
                                 onChange={(e) => set({ departmentId: e.target.value })}
                                 className={`w-full px-4 py-2.5 border rounded-xl text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat ${errors.departmentId ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}

@@ -1,54 +1,85 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  bookings as initialBookings,
-  rooms,
-  departments,
-  users,
-} from '@/lib/mock-data';
 import { Booking } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import { formatDate, formatTime, getMeetingStatus } from '@/lib/utils';
-import { Plus, Pencil, Trash2, Search, CalendarDays, Clock, Building2, FileText, Users, User } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CalendarDays, Clock, Building2, FileText, User } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  deleteBookingAction,
+  getBookingsAction,
+  updateBookingAction,
+} from '@/services/booking.service';
+import { useToastStore } from '@/components/ui/Toast';
+import { staggerStyle, staggerClass } from '@/lib/animations';
 
-// ─── Form state shape ─────────────────────────────────────────────────────────
+// ─── Form state shape ─────────────────
 interface BookingForm {
-  roomId: string;
   departmentId: string;
-  userId: string;
   purpose: string;
-  participants: string;
   date: string;
   startTime: string;
   endTime: string;
 }
 
 const EMPTY_FORM: BookingForm = {
-  roomId: rooms[0]?.id ?? '',
-  departmentId: departments[0]?.id ?? '',
-  userId: users[0]?.id ?? '',
+  departmentId: '',
   purpose: '',
-  participants: '1',
   date: format(new Date(), 'yyyy-MM-dd'),
   startTime: '09:00',
   endTime: '10:00',
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ───────────
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function bookingTimeToMinutes(iso: string): number {
+  const date = new Date(iso);
+  return date.getHours() * 60 + date.getMinutes();
+}
+
 export default function ManageBookingsPage() {
   const router = useRouter();
-  const [bookingList, setBookingList] = useState<Booking[]>(initialBookings);
+  const addToast = useToastStore((state) => state.addToast);
+  const [bookingList, setBookingList] = useState<Booking[]>([]);
   const [search, setSearch] = useState('');
-  const [addOpen, setAddOpen] = useState(false);
   const [editBooking, setEditBooking] = useState<Booking | null>(null);
   const [deleteBooking, setDeleteBooking] = useState<Booking | null>(null);
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // ─── Filtered list ───────────────────────────────────────────────────────
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadBookings() {
+      setIsLoading(true);
+      const result = await getBookingsAction();
+      if (ignore) return;
+
+      if (result.success) {
+        setBookingList(result.bookings ?? []);
+      } else {
+        addToast(result.error ?? 'Failed to load bookings.', 'error');
+      }
+
+      setIsLoading(false);
+    }
+
+    void loadBookings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [addToast]);
+
+  // ─── Filtered list ────────────────────
   const filtered = useMemo(() => {
     if (!search) return bookingList;
     const q = search.toLowerCase();
@@ -56,69 +87,85 @@ export default function ManageBookingsPage() {
       (b) =>
         b.bookingCode.toLowerCase().includes(q) ||
         b.purpose.toLowerCase().includes(q) ||
-        b.room?.name.toLowerCase().includes(q) ||
         b.department?.name.toLowerCase().includes(q)
     );
   }, [bookingList, search]);
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────
   const fieldVal = (f: Partial<BookingForm>) =>
     setForm((prev) => ({ ...prev, ...f }));
 
-  const buildBooking = (f: BookingForm, id?: string, code?: string): Booking => {
-    const room = rooms.find((r) => r.id === f.roomId)!;
-    const department = departments.find((d) => d.id === f.departmentId)!;
-    const user = users.find((u) => u.id === f.userId)!;
-    const startIso = new Date(`${f.date}T${f.startTime}:00`).toISOString();
-    const endIso = new Date(`${f.date}T${f.endTime}:00`).toISOString();
-    const newId = id ?? `bk-${Date.now()}`;
-    const newCode = code ?? `BK-${Date.now().toString().slice(-4)}`;
-    return {
-      id: newId,
-      bookingCode: newCode,
-      userId: user.id,
-      user,
-      roomId: room.id,
-      room,
-      departmentId: department.id,
-      department,
-      purpose: f.purpose,
-      participants: Number(f.participants),
-      startTime: startIso,
-      endTime: endIso,
-      date: f.date,
-      createdAt: new Date().toISOString(),
-    };
-  };
+  // ─── CRUD ────────────────────────────────
+  const overlappingBooking = useMemo(() => {
+    if (!editBooking) return null;
 
-  // ─── CRUD ─────────────────────────────────────────────────────────────────
-  const handleAdd = () => {
-    if (!form.purpose.trim()) return;
-    const newBooking = buildBooking(form);
-    setBookingList((prev) => [newBooking, ...prev]);
-    setForm(EMPTY_FORM);
-    setAddOpen(false);
-  };
+    const start = timeToMinutes(form.startTime);
+    const end = timeToMinutes(form.endTime);
+    if (start >= end) return null;
 
-  const handleEdit = () => {
-    if (!editBooking || !form.purpose.trim()) return;
-    const updated = buildBooking(form, editBooking.id, editBooking.bookingCode);
-    setBookingList((prev) => prev.map((b) => (b.id === editBooking.id ? updated : b)));
+    return (
+      bookingList.find((booking) => {
+        if (booking.id === editBooking.id || booking.date !== form.date) return false;
+
+        const existingStart = bookingTimeToMinutes(booking.startTime);
+        const existingEnd = bookingTimeToMinutes(booking.endTime);
+        return start < existingEnd && end > existingStart;
+      }) ?? null
+    );
+  }, [bookingList, editBooking, form.date, form.endTime, form.startTime]);
+
+  const handleEdit = async () => {
+    if (!editBooking) return;
+
+    if (timeToMinutes(form.startTime) >= timeToMinutes(form.endTime)) {
+      addToast('End time must be after start time.', 'error');
+      return;
+    }
+
+    if (overlappingBooking) {
+      addToast(`This time overlaps with booking ${overlappingBooking.bookingCode}.`, 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    const result = await updateBookingAction(editBooking.id, {
+      departmentId: form.departmentId,
+      description: form.purpose,
+      date: form.date,
+      startTime: form.startTime,
+      endTime: form.endTime,
+    });
+    setIsSaving(false);
+
+    if (!result.success || !result.booking) {
+      addToast(result.error ?? 'Failed to update booking.', 'error');
+      return;
+    }
+
+    setBookingList((prev) => prev.map((b) => (b.id === editBooking.id ? result.booking! : b)));
     setEditBooking(null);
+    addToast('Booking updated successfully.', 'success');
   };
 
-  const handleDelete = (b: Booking) => {
+  const handleDelete = async (b: Booking) => {
+    setIsSaving(true);
+    const result = await deleteBookingAction(b.id);
+    setIsSaving(false);
+
+    if (!result.success) {
+      addToast(result.error ?? 'Failed to delete booking.', 'error');
+      return;
+    }
+
     setBookingList((prev) => prev.filter((x) => x.id !== b.id));
     setDeleteBooking(null);
+    addToast('Booking deleted successfully.', 'success');
   };
 
   const openEdit = (b: Booking) => {
     setForm({
-      roomId: b.roomId,
       departmentId: b.departmentId,
-      userId: b.userId,
       purpose: b.purpose,
-      participants: String(b.participants),
       date: b.date,
       startTime: format(new Date(b.startTime), 'HH:mm'),
       endTime: format(new Date(b.endTime), 'HH:mm'),
@@ -126,30 +173,30 @@ export default function ManageBookingsPage() {
     setEditBooking(b);
   };
 
-  // ─── Shared form JSX ──────────────────────────────────────────────────────
-  const BookingFormFields = () => (
+  // ─── Input style ──────────────────────────
+  const inputCls = 'w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200';
+  const selectCls = `${inputCls} pr-8 appearance-none bg-white`;
+  const selectBg = {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundPosition: 'right 12px center',
+  };
+
+  // ─── Shared form JSX ───────────────────────
+  const bookingFormFields = (
     <div className="space-y-4">
       {/* Department */}
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-gray-700">Department</label>
         <div className="relative">
           <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select
+          <input
             id="form-department"
+            type="text"
             disabled
-            value={form.departmentId}
-            onChange={(e) => fieldVal({ departmentId: e.target.value })}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 12px center',
-            }}
-          >
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
+            value={editBooking?.department?.name ?? 'Department'}
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+          />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
             locked
           </span>
@@ -164,9 +211,9 @@ export default function ManageBookingsPage() {
           <input
             id="form-user"
             type="text"
-            value={users.find((u) => u.id === form.userId)?.name ?? 'Admin User'}
+            value={editBooking?.user?.name ?? 'Admin User'}
             disabled
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400 cursor-not-allowed select-none"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
             locked
@@ -184,7 +231,7 @@ export default function ManageBookingsPage() {
             type="date"
             value={form.date}
             onChange={(e) => fieldVal({ date: e.target.value })}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className={inputCls}
           />
         </div>
       </div>
@@ -199,12 +246,8 @@ export default function ManageBookingsPage() {
               id="form-start-time"
               value={form.startTime}
               onChange={(e) => fieldVal({ startTime: e.target.value })}
-              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-              }}
+              className={selectCls}
+              style={selectBg}
             >
               {Array.from({ length: 24 }, (_, i) => {
                 const hh = String(i).padStart(2, '0');
@@ -226,12 +269,8 @@ export default function ManageBookingsPage() {
               id="form-end-time"
               value={form.endTime}
               onChange={(e) => fieldVal({ endTime: e.target.value })}
-              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-              }}
+              className={selectCls}
+              style={selectBg}
             >
               {Array.from({ length: 24 }, (_, i) => {
                 const hh = String(i).padStart(2, '0');
@@ -258,7 +297,7 @@ export default function ManageBookingsPage() {
             onChange={(e) => fieldVal({ purpose: e.target.value })}
             placeholder="Enter meeting description or agenda..."
             maxLength={250}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+            className={`${inputCls} resize-none`}
           />
           <span className="absolute bottom-2.5 right-3 text-[10px] text-gray-400">
             {form.purpose.length} / 250
@@ -268,32 +307,32 @@ export default function ManageBookingsPage() {
     </div>
   );
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-500">Admin Panel › Manage Bookings</p>
         <button
           id="add-booking-btn"
           onClick={() => router.push('/admin/manage-bookings/add-booking')}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
+          className="group flex items-center gap-2 px-5 py-2.5 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95 btn-press"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
           New Booking
         </button>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors" />
         <input
           id="booking-search"
           type="text"
-          placeholder="Search by booking ID, description, room or department…"
+          placeholder="Search by booking ID, description or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-3 md:py-3.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
         />
       </div>
 
@@ -303,10 +342,14 @@ export default function ManageBookingsPage() {
           <div className="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center text-gray-400 text-sm">
             No bookings found.
           </div>
-        ) : filtered.map((b) => {
+        ) : filtered.map((b, idx) => {
           const status = getMeetingStatus(b.startTime, b.endTime);
           return (
-            <div key={b.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+            <div
+              key={b.id}
+              className={`bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3 hover-lift ${staggerClass()}`}
+              style={staggerStyle(idx)}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-800 text-sm truncate">{b.purpose}</p>
@@ -323,14 +366,14 @@ export default function ManageBookingsPage() {
                 <button
                   id={`edit-booking-${b.id}`}
                   onClick={() => openEdit(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-150 active:scale-95"
                 >
                   Edit
                 </button>
                 <button
                   id={`delete-booking-${b.id}`}
                   onClick={() => setDeleteBooking(b)}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                  className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-150 active:scale-95"
                 >
                   Delete
                 </button>
@@ -345,7 +388,11 @@ export default function ManageBookingsPage() {
         <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800">
             All Bookings{' '}
-            <span className="text-sm font-normal text-gray-400">({filtered.length})</span>
+            {!isLoading && (
+              <span className="text-sm font-normal text-gray-400 animate-fade-in">
+                ({filtered.length})
+              </span>
+            )}
           </h2>
         </div>
 
@@ -365,30 +412,44 @@ export default function ManageBookingsPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">No bookings found.</td>
+                  <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm animate-fade-in">
+                    No bookings found.
+                  </td>
                 </tr>
               ) : (
-                filtered.map((b) => {
+                filtered.map((b, idx) => {
                   const status = getMeetingStatus(b.startTime, b.endTime);
                   return (
-                    <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
-                      <td className="px-4 py-3 text-gray-600">{b.department?.name}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
+                    <tr
+                      key={b.id}
+                      className={`hover:bg-blue-50/40 transition-colors duration-150 ${staggerClass()}`}
+                      style={staggerStyle(idx, 30)}
+                    >
+                      <td className="px-4 py-3.5 md:py-4 font-mono text-xs font-medium text-gray-700">{b.bookingCode}</td>
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600">{b.department?.name}</td>
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600 whitespace-nowrap text-xs">
                         <div>{formatDate(b.date)}</div>
                         <div className="text-gray-400">{formatTime(b.startTime)} – {formatTime(b.endTime)}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
-                      <td className="px-4 py-3"><MeetingStatusBadge status={status} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1.5">
-                          <button id={`edit-booking-${b.id}`} onClick={() => openEdit(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
-                            <Pencil className="w-3.5 h-3.5" />
+                      <td className="px-4 py-3.5 md:py-4 text-gray-600 max-w-[140px] truncate">{b.purpose}</td>
+                      <td className="px-4 py-3.5 md:py-4"><MeetingStatusBadge status={status} /></td>
+                      <td className="px-4 py-3.5 md:py-4">
+                        <div className="flex gap-2">
+                          <button
+                            id={`edit-booking-${b.id}`}
+                            onClick={() => openEdit(b)}
+                            className="group w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-150 active:scale-90"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4.5 h-4.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
-                          <button id={`delete-booking-${b.id}`} onClick={() => setDeleteBooking(b)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors" title="Delete">
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <button
+                            id={`delete-booking-${b.id}`}
+                            onClick={() => setDeleteBooking(b)}
+                            className="group w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-100 hover:text-red-700 transition-all duration-150 active:scale-90"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4.5 h-4.5 transition-transform duration-150 group-hover:scale-110" />
                           </button>
                         </div>
                       </td>
@@ -401,45 +462,30 @@ export default function ManageBookingsPage() {
         </div>
       </div>
 
-      {/* Add Modal */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="New Booking" size="md">
-        <div className="space-y-5">
-          <BookingFormFields />
-          <div className="flex gap-3 pt-1">
-            <button
-              onClick={() => setAddOpen(false)}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              id="save-new-booking-btn"
-              onClick={handleAdd}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Create Booking
-            </button>
-          </div>
-        </div>
-      </Modal>
-
       {/* Edit Modal */}
       <Modal open={!!editBooking} onClose={() => setEditBooking(null)} title="Edit Booking" size="md">
         <div className="space-y-5">
-          <BookingFormFields />
+          {bookingFormFields}
           <div className="flex gap-3 pt-1">
             <button
               onClick={() => setEditBooking(null)}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
+              disabled={isSaving}
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
             >
               Cancel
             </button>
             <button
               id="save-edit-booking-btn"
               onClick={handleEdit}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+              disabled={isSaving}
+              className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Save Changes
+              {isSaving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-smooth" />
+                  Saving…
+                </span>
+              ) : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -457,16 +503,23 @@ export default function ManageBookingsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteBooking(null)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50"
+                disabled={isSaving}
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-all duration-150 active:scale-95"
               >
                 Cancel
               </button>
               <button
                 id={`confirm-delete-booking-${deleteBooking.id}`}
                 onClick={() => handleDelete(deleteBooking)}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+                disabled={isSaving}
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md hover:shadow-red-200"
               >
-                Delete
+                {isSaving ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-smooth" />
+                    Deleting…
+                  </span>
+                ) : 'Delete'}
               </button>
             </div>
           </div>

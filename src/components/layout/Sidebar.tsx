@@ -45,7 +45,7 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {!sidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          className="fixed inset-0 bg-black/50 z-20 md:hidden animate-backdrop-in"
           onClick={toggleSidebar}
         />
       )}
@@ -71,7 +71,11 @@ export default function Sidebar() {
         `}>
           <div className="flex items-center justify-between w-full">
             <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'md:justify-center md:w-full lg:justify-start lg:w-auto' : ''}`}>
-              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+              {/* Logo icon with hover scale */}
+              <div
+                className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0"
+                style={{ transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)' }}
+              >
                 <Calendar className="w-5 h-5 text-white" />
               </div>
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
@@ -86,9 +90,10 @@ export default function Sidebar() {
             {!sidebarCollapsed && (
               <button
                 onClick={toggleSidebar}
-                className="md:hidden text-white/60 hover:text-white"
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-white/60 hover:text-white"
+                style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), color 0.15s ease' }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             )}
           </div>
@@ -96,14 +101,14 @@ export default function Sidebar() {
           {/* Toggle Button Under Logo (Visible ONLY on Tablet) */}
           <button
             onClick={toggleSidebar}
-            className="hidden md:flex lg:hidden mt-3 w-full items-center gap-2 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-150 justify-center"
+            className="hidden md:flex lg:hidden mt-3 w-full items-center gap-2 py-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-150 justify-center"
             title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {sidebarCollapsed ? (
-              <ChevronRight className="w-4 h-4 shrink-0" />
+              <ChevronRight className="w-5 h-5 shrink-0 transition-transform duration-200" />
             ) : (
               <>
-                <ChevronLeft className="w-4 h-4 shrink-0" />
+                <ChevronLeft className="w-5 h-5 shrink-0 transition-transform duration-200" />
                 <span>Collapse Sidebar</span>
               </>
             )}
@@ -113,26 +118,39 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className={`flex-1 py-4 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'px-2 lg:px-3' : 'px-3'}`}>
           <ul className="space-y-1">
-            {navLinks.map(({ href, label, icon: Icon }) => {
+            {navLinks.map(({ href, label, icon: Icon }, idx) => {
               const active = pathname === href || pathname.startsWith(href + '/');
               return (
-                <li key={href}>
+                <li
+                  key={href}
+                  className="animate-stagger-in"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
                   <Link
                     href={href}
                     title={sidebarCollapsed ? label : undefined}
                     className={`
-                      flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium
-                      transition-all duration-150
+                      group relative flex items-center gap-3 py-2.5 md:py-3 rounded-lg text-sm font-medium
+                      transition-all duration-200
                       ${sidebarCollapsed ? 'px-0 justify-center lg:px-3 lg:justify-start' : 'px-3 justify-start'}
                       ${
                         active
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
                           : 'text-slate-300 hover:text-white hover:bg-white/10'
                       }
                     `}
                   >
-                    <Icon className="w-4.5 h-4.5 shrink-0" />
-                    <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>{label}</span>
+                    {/* Active indicator bar */}
+                    {active && (
+                      <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-white rounded-full animate-active-bar" />
+                    )}
+
+                    <Icon
+                      className={`w-4.5 h-4.5 md:w-5 md:h-5 shrink-0 transition-transform duration-200 ${active ? '' : 'group-hover:scale-110'}`}
+                    />
+                    <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>
+                      {label}
+                    </span>
                   </Link>
                 </li>
               );
@@ -146,11 +164,13 @@ export default function Sidebar() {
             onClick={handleLogout}
             title={sidebarCollapsed ? 'Logout' : undefined}
             className={`
-              w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-red-500/20 transition-all duration-150
+              group w-full flex items-center gap-3 py-2.5 md:py-3 rounded-lg text-sm font-medium
+              text-slate-300 hover:text-white hover:bg-red-500/20
+              transition-all duration-200
               ${sidebarCollapsed ? 'px-0 justify-center lg:px-3 lg:justify-start' : 'px-3 justify-start'}
             `}
           >
-            <LogOut className="w-4.5 h-4.5 shrink-0" />
+            <LogOut className="w-4.5 h-4.5 md:w-5 md:h-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
             <span className={sidebarCollapsed ? "inline md:hidden lg:inline" : "inline"}>Logout</span>
           </button>
         </div>

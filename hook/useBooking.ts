@@ -1,135 +1,128 @@
-// 'use client';
+'use client';
 
-// import { useCallback, useState } from 'react';
-// import type { Booking } from '@/lib/types';
-// import {
-//   bookingService,
-//   type CreateBookingInput,
-//   type UpdateBookingInput,
-// } from '@/services/booking.service';
+import { useCallback, useState } from 'react';
+import type { Booking } from '@/lib/types';
+import {
+  getBookingsAction,
+  getMyBookingsAction,
+  getBookingsByDateAction,
+  createBookingAction,
+  updateBookingAction,
+  deleteBookingAction,
+  type CreateBookingInput,
+  type UpdateBookingInput,
+} from '@/services/booking.service';
 
-// export function useBooking() {
-//   const [bookings, setBookings] = useState<Booking[]>([]);
-//   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
+export function useBooking() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-//   const run = useCallback(async <T,>(action: () => Promise<T>) => {
-//     setIsLoading(true);
-//     setError(null);
+  /** Wrap any async action with loading + error state management. */
+  const run = useCallback(async <T,>(action: () => Promise<T>): Promise<T> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      return await action();
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error ? caughtError.message : 'An unexpected error occurred.';
+      setError(message);
+      throw caughtError;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-//     try {
-//       return await action();
-//     } catch (caughtError) {
-//       const message =
-//         caughtError instanceof Error ? caughtError.message : 'Unable to load bookings.';
-//       setError(message);
-//       throw caughtError;
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }, []);
+  // ── Load all bookings 
 
-//   const loadBookings = useCallback(async () => {
-//     const result = await run(() => bookingService.getBookings());
-//     setBookings(result);
-//     return result;
-//   }, [run]);
+  const loadBookings = useCallback(async () => {
+    return run(async () => {
+      const result = await getBookingsAction();
+      if (!result.success) throw new Error(result.error);
+      setBookings(result.bookings ?? []);
+      return result.bookings ?? [];
+    });
+  }, [run]);
 
-//   const getBookingById = useCallback(
-//     async (id: string) => {
-//       const result = await run(() => bookingService.getBookingById(id));
-//       setSelectedBooking(result);
-//       return result;
-//     },
-//     [run]
-//   );
+  // ── Load the current user's own bookings 
 
-//   const loadBookingsByUser = useCallback(
-//     async (userId: string) => {
-//       const result = await run(() => bookingService.getBookingsByUser(userId));
-//       setBookings(result);
-//       return result;
-//     },
-//     [run]
-//   );
+  const loadMyBookings = useCallback(async () => {
+    return run(async () => {
+      const result = await getMyBookingsAction();
+      if (!result.success) throw new Error(result.error);
+      setBookings(result.bookings ?? []);
+      return result.bookings ?? [];
+    });
+  }, [run]);
 
-//   const loadBookingsForMonth = useCallback(
-//     async (year: number, month: number) => {
-//       const result = await run(() => bookingService.getBookingsForMonth(year, month));
-//       setBookings(result);
-//       return result;
-//     },
-//     [run]
-//   );
+  // ── Load bookings for a specific date 
 
-//   const loadTodaysBookings = useCallback(async () => {
-//     const result = await run(() => bookingService.getTodaysBookings());
-//     setBookings(result);
-//     return result;
-//   }, [run]);
+  const loadBookingsByDate = useCallback(
+    async (dateStr: string) => {
+      return run(async () => {
+        const result = await getBookingsByDateAction(dateStr);
+        if (!result.success) throw new Error(result.error);
+        return result.bookings ?? [];
+      });
+    },
+    [run],
+  );
 
-//   const loadUpcomingBookings = useCallback(
-//     async (limit?: number) => {
-//       const result = await run(() => bookingService.getUpcomingBookings(limit));
-//       setBookings(result);
-//       return result;
-//     },
-//     [run]
-//   );
+  // ── Create 
 
-//   const createBooking = useCallback(
-//     async (input: CreateBookingInput) => {
-//       const result = await run(() => bookingService.createBooking(input));
-//       setBookings((current) => [result, ...current]);
-//       return result;
-//     },
-//     [run]
-//   );
+  const createBooking = useCallback(
+    async (input: CreateBookingInput) => {
+      return run(async () => {
+        const result = await createBookingAction(input);
+        if (!result.success || !result.booking) throw new Error(result.error);
+        // Prepend to local state so the UI updates immediately
+        setBookings((prev) => [result.booking!, ...prev]);
+        return result.booking;
+      });
+    },
+    [run],
+  );
 
-//   const updateBooking = useCallback(
-//     async (id: string, input: UpdateBookingInput) => {
-//       const result = await run(() => bookingService.updateBooking(id, input));
+  // ── Update ────────────────────────────────────────────────────────────────
 
-//       if (result) {
-//         setBookings((current) =>
-//           current.map((booking) => (booking.id === id ? result : booking))
-//         );
-//         setSelectedBooking((current) => (current?.id === id ? result : current));
-//       }
+  const updateBooking = useCallback(
+    async (id: string, input: UpdateBookingInput) => {
+      return run(async () => {
+        const result = await updateBookingAction(id, input);
+        if (!result.success || !result.booking) throw new Error(result.error);
+        setBookings((prev) =>
+          prev.map((b) => (b.id === id ? result.booking! : b)),
+        );
+        return result.booking;
+      });
+    },
+    [run],
+  );
 
-//       return result;
-//     },
-//     [run]
-//   );
+  // ── Delete ────────────────────────────────────────────────────────────────
 
-//   const deleteBooking = useCallback(
-//     async (id: string) => {
-//       const result = await run(() => bookingService.deleteBooking(id));
+  const deleteBooking = useCallback(
+    async (id: string) => {
+      return run(async () => {
+        const result = await deleteBookingAction(id);
+        if (!result.success) throw new Error(result.error);
+        setBookings((prev) => prev.filter((b) => b.id !== id));
+        return true;
+      });
+    },
+    [run],
+  );
 
-//       if (result) {
-//         setBookings((current) => current.filter((booking) => booking.id !== id));
-//         setSelectedBooking((current) => (current?.id === id ? null : current));
-//       }
-
-//       return result;
-//     },
-//     [run]
-//   );
-
-//   return {
-//     bookings,
-//     selectedBooking,
-//     isLoading,
-//     error,
-//     loadBookings,
-//     getBookingById,
-//     loadBookingsByUser,
-//     loadBookingsForMonth,
-//     loadTodaysBookings,
-//     loadUpcomingBookings,
-//     createBooking,
-//     updateBooking,
-//     deleteBooking,
-//   };
-// }
+  return {
+    bookings,
+    isLoading,
+    error,
+    loadBookings,
+    loadMyBookings,
+    loadBookingsByDate,
+    createBooking,
+    updateBooking,
+    deleteBooking,
+  };
+}

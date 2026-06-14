@@ -42,10 +42,10 @@ model Booking {
   id           Int        @id @default(autoincrement())
   userId       Int
   departmentId Int
-  description  String
-  date         DateTime
-  startTime    DateTime
-  endTime      DateTime
+  description  String?
+  date         DateTime   @db.Date
+  startTime    DateTime   @db.Time(0)
+  endTime      DateTime   @db.Time(0)
   isActive     Boolean?   @default(true)
   user         User       @relation(fields: [userId], references: [id], onDelete: Restrict)
   department   Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)

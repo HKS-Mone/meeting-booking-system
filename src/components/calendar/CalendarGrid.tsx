@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, format, isSameMonth, isToday, isSameDay,
@@ -35,7 +35,27 @@ const WEEKDAYS_LONG  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function CalendarGrid({ currentDate, bookings }: CalendarGridProps) {
+  // selectedDay = the day that is open (or about to close)
+  // closing = true while the exit animation is playing
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [closing, setClosing]         = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Dismiss: trigger exit animation, then clear the day after it finishes
+  const handleClose = () => {
+    setClosing(true);
+    closeTimerRef.current = setTimeout(() => {
+      setSelectedDay(null);
+      setClosing(false);
+    }, 220);
+  };
+
+  // If the parent swaps the month while a day is open, close immediately
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd   = endOfMonth(currentDate);
@@ -84,7 +104,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                 onClick={() => setSelectedDay(day)}
                 onKeyDown={(e) => e.key === 'Enter' && setSelectedDay(day)}
                 className={`
-                  min-h-[60px] sm:min-h-[100px] p-1 sm:p-1.5 cursor-pointer
+                  min-h-[60px] md:min-h-[110px] p-1 md:p-2 cursor-pointer
                   border-b border-r border-gray-50
                   transition-colors duration-100
                   ${!inMonth ? 'bg-gray-50/50 hover:bg-gray-100/60' : 'hover:bg-blue-50/40'}
@@ -95,8 +115,8 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                 <div className="flex justify-end mb-0.5">
                   <span
                     className={`
-                      w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
-                      text-[10px] sm:text-xs font-medium select-none
+                      w-5 h-5 md:w-7 md:h-7 flex items-center justify-center rounded-full
+                      text-[10px] md:text-sm font-medium select-none
                       ${todayDay
                         ? 'bg-blue-600 text-white'
                         : inMonth ? 'text-gray-700' : 'text-gray-300'
@@ -145,17 +165,23 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
       </div>
 
       {/* ── Day popup overlay ─────────────────────────────────────────────── */}
-      {selectedDay && (
+      {(selectedDay || closing) && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          {/* Backdrop */}
+          {/* Backdrop — fades in/out */}
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setSelectedDay(null)}
+            className={`absolute inset-0 bg-black/40 backdrop-blur-sm ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+            onClick={handleClose}
           />
 
-          {/* Panel */}
+          {/* Panel — slides up on mobile, scales in/out on desktop */}
           <div
-            className="relative w-full sm:max-w-lg bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden"
+            className={`
+              relative w-full sm:max-w-lg bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden
+              ${closing
+                ? 'animate-slide-up sm:animate-scale-out'
+                : 'animate-slide-up sm:animate-scale-in'
+              }
+            `}
             style={{ maxHeight: '88vh' }}
           >
             {/* Header */}
@@ -178,11 +204,12 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
               </div>
               <button
                 id="day-popup-close-btn"
-                onClick={() => setSelectedDay(null)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 transition-colors shrink-0 ml-4"
+                onClick={handleClose}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200 shrink-0 ml-4 hover:rotate-90"
+                style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), color 0.15s ease, background 0.15s ease' }}
                 aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -190,7 +217,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(88vh - 84px)' }}>
               {selectedDayBookings.length === 0 ? (
                 /* ── Empty state ── */
-                <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+                <div className="flex flex-col items-center justify-center py-14 px-6 text-center animate-fade-in-up">
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
                     style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)' }}
@@ -206,12 +233,16 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                 /* ── Meetings list (Google Calendar style) ── */
                 <div className="divide-y divide-gray-50">
                   {selectedDayBookings.map((b, idx) => {
-                    const palette = GC_PALETTE[idx % GC_PALETTE.length];
-                    const status  = getMeetingStatus(b.startTime, b.endTime);
+                    const palette  = GC_PALETTE[idx % GC_PALETTE.length];
+                    const status   = getMeetingStatus(b.startTime, b.endTime);
                     const duration = getDurationLabel(b.startTime, b.endTime);
 
                     return (
-                      <div key={b.id} className="px-5 py-4 group hover:bg-gray-50/60 transition-colors">
+                      <div
+                        key={b.id}
+                        className="px-5 py-4 group hover:bg-gray-50/60 transition-colors animate-stagger-in"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                      >
                         {/* Time + title row */}
                         <div className="flex gap-4 items-start">
                           {/* Time column */}
@@ -262,7 +293,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
                                   </span>
                                 </div>
 
-                                {/* Description — textarea-style read-only block */}
+                                {/* Description */}
                                 {b.purpose && (
                                   <div className="mt-1">
                                     <p
