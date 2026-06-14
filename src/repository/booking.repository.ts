@@ -7,10 +7,12 @@ const bookingInclude = {
 } satisfies Prisma.BookingInclude;
 
 function dateRangeForDay(date: Date) {
+  // Use UTC methods so the range correctly brackets the UTC calendar day
+  // that was stored (dates are persisted as UTC via Prisma / MySQL @db.Date).
   const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
+  start.setUTCHours(0, 0, 0, 0);
   const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
+  end.setUTCHours(23, 59, 59, 999);
 
   return { start, end };
 }

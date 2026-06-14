@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../hook/useAuth';
 import { Eye, EyeOff, Mail, Lock, Calendar } from 'lucide-react';
+import type { User } from '@/lib/types';
+
+function getPostLoginPath(user?: User) {
+  return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+    ? '/admin/dashboard'
+    : '/calendar';
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,8 +18,14 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { currentUser, login, isLoading, isCheckingSession } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isCheckingSession && currentUser) {
+      router.replace(getPostLoginPath(currentUser));
+    }
+  }, [currentUser, isCheckingSession, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +45,7 @@ export default function LoginPage() {
 
     // Use replace so the login page is removed from the history stack
     // and the user cannot navigate back to it via the browser back button.
-    const user = result.user;
-    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
-      router.replace('/admin/dashboard');
-    } else {
-      router.replace('/calendar');
-    }
+    router.replace(getPostLoginPath(result.user));
   };
 
   return (
@@ -95,7 +103,7 @@ export default function LoginPage() {
         {/* Right panel — form */}
         <div className="w-full md:flex-1 flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 md:px-10" style={{ maxWidth: '460px' }}>
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center justify-center gap-2 mb-8">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center">
               <Calendar className="w-5 h-5 text-white" />
             </div>
@@ -105,8 +113,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
-          <p className="text-gray-500 text-sm mt-1 mb-8">Please login to your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h1>
+          <p className="text-gray-500 text-sm mt-1 mb-8 text-center">Please login to your account</p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* Error banner */}
@@ -159,19 +167,6 @@ export default function LoginPage() {
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-            </div>
-
-            {/* Remember */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                Remember me
-              </label>
             </div>
 
             {/* Submit */}
