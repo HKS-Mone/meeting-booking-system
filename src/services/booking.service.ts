@@ -58,9 +58,14 @@ async function getAuthenticatedUserId(): Promise<number | null> {
 /**
  * Convert a date string + time string into a single Date object.
  * date: "YYYY-MM-DD", time: "HH:MM"
+ *
+ * IMPORTANT: We append 'Z' so that Node.js always parses this as UTC.
+ * MySQL @db.Date / @db.Time columns have no timezone; Prisma stores exactly
+ * the UTC value from the Date object. Without 'Z', Node.js would interpret
+ * the string using the *server's* local timezone, shifting the stored time.
  */
 function buildDateTime(date: string, time: string): Date {
-  return new Date(`${date}T${time}:00`);
+  return new Date(`${date}T${time}:00Z`);
 }
 
 function timeToMinutes(time: string): number {
@@ -153,7 +158,9 @@ export async function getMyBookingsAction(): Promise<BookingsResult> {
 /** Return bookings for a given calendar date (YYYY-MM-DD). */
 export async function getBookingsByDateAction(dateStr: string): Promise<BookingsResult> {
   try {
-    const date = new Date(dateStr);
+    // Append 'T00:00:00Z' so the date is parsed as UTC midnight, which is
+    // consistent with how we store dates (MySQL @db.Date, written as UTC).
+    const date = new Date(`${dateStr}T00:00:00Z`);
     if (isNaN(date.getTime())) return { success: false, error: 'Invalid date.' };
 
     const rows = await BookingRepository.findByDate(date);
@@ -172,7 +179,9 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     if (!input.date) return { success: false, error: 'Date is required.' };
     if (!input.startTime || !input.endTime) return { success: false, error: 'Start and end time are required.' };
 
-    const date = new Date(input.date);
+    // Append time+Z so the date is always treated as UTC midnight (consistent
+    // with @db.Date storage via Prisma).
+    const date = new Date(`${input.date}T00:00:00Z`);
     if (isNaN(date.getTime())) return { success: false, error: 'Invalid date.' };
     if (timeToMinutes(input.startTime) >= timeToMinutes(input.endTime)) {
       return { success: false, error: 'End time must be after start time.' };
@@ -225,7 +234,7 @@ export async function updateBookingAction(
     const dateStr = input.date ?? existing.date.toISOString().slice(0, 10);
     const nextStartTime = input.startTime ? buildDateTime(dateStr, input.startTime) : existing.startTime;
     const nextEndTime = input.endTime ? buildDateTime(dateStr, input.endTime) : existing.endTime;
-    const nextDate = new Date(dateStr);
+    const nextDate = new Date(`${dateStr}T00:00:00Z`);
 
     if (isNaN(nextDate.getTime())) return { success: false, error: 'Invalid date.' };
 
