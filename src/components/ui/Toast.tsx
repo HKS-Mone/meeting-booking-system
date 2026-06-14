@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle, XCircle, Info, AlertCircle, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -20,49 +20,94 @@ const icons = {
 };
 
 const styles = {
-  success: 'bg-green-50 border-green-200 text-green-800',
-  error: 'bg-red-50 border-red-200 text-red-800',
-  info: 'bg-blue-50 border-blue-200 text-blue-800',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-};
-
-const iconStyles = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  info: 'text-blue-500',
-  warning: 'text-yellow-500',
+  success: {
+    wrap: 'bg-white border-green-200',
+    icon: 'text-green-500',
+    text: 'text-gray-800',
+    bar: 'bg-green-500',
+    accent: 'bg-green-500',
+  },
+  error: {
+    wrap: 'bg-white border-red-200',
+    icon: 'text-red-500',
+    text: 'text-gray-800',
+    bar: 'bg-red-500',
+    accent: 'bg-red-500',
+  },
+  info: {
+    wrap: 'bg-white border-blue-200',
+    icon: 'text-blue-500',
+    text: 'text-gray-800',
+    bar: 'bg-blue-500',
+    accent: 'bg-blue-500',
+  },
+  warning: {
+    wrap: 'bg-white border-yellow-200',
+    icon: 'text-yellow-500',
+    text: 'text-gray-800',
+    bar: 'bg-yellow-500',
+    accent: 'bg-yellow-500',
+  },
 };
 
 export default function Toast({ message, type = 'info', onClose, duration = 4000 }: ToastProps) {
-  const [visible, setVisible] = useState(true);
+  const [phase, setPhase] = useState<'in' | 'idle' | 'out'>('in');
+  const s = styles[type];
   const Icon = icons[type];
 
+  const dismiss = () => {
+    setPhase('out');
+    setTimeout(onClose, 300);
+  };
+
   useEffect(() => {
-    const t = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onClose, 300);
-    }, duration);
-    return () => clearTimeout(t);
-  }, [duration, onClose]);
+    // After slide-in completes, switch to idle (so progress bar CSS can start)
+    const inTimer = setTimeout(() => setPhase('idle'), 350);
+    // Auto-dismiss after duration
+    const outTimer = setTimeout(dismiss, duration);
+    return () => {
+      clearTimeout(inTimer);
+      clearTimeout(outTimer);
+    };
+  }, [duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
       className={`
-        fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg
-        transition-all duration-300
-        ${styles[type]}
-        ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+        relative flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl overflow-hidden
+        w-[300px] md:w-[320px] max-w-full
+        ${s.wrap}
+        ${phase === 'in'  ? 'animate-toast-in' : ''}
+        ${phase === 'out' ? 'animate-toast-out' : ''}
       `}
-      style={{ minWidth: '280px', maxWidth: '400px' }}
+      style={{ maxWidth: '400px' }}
     >
-      <Icon className={`w-5 h-5 shrink-0 ${iconStyles[type]}`} />
-      <p className="flex-1 text-sm font-medium">{message}</p>
+      {/* Coloured left accent bar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${s.accent}`} />
+
+      {/* Icon */}
+      <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${s.icon}`} />
+
+      {/* Message */}
+      <p className={`flex-1 text-sm font-medium leading-snug ${s.text}`}>{message}</p>
+
+      {/* Close */}
       <button
-        onClick={() => { setVisible(false); setTimeout(onClose, 300); }}
-        className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+        onClick={dismiss}
+        className="shrink-0 w-10 h-10 -mr-2 -mt-2 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all active:scale-95"
       >
-        <X className="w-4 h-4" />
+        <X className="w-5 h-5" />
       </button>
+
+      {/* Progress bar — sweeps from full to empty over `duration` ms */}
+      {phase === 'idle' && (
+        <div
+          className={`absolute bottom-0 left-0 h-[2px] ${s.bar} rounded-full`}
+          style={{
+            animation: `toast-progress ${duration - 350}ms linear forwards`,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -88,7 +133,7 @@ export const useToastStore = create<ToastState>((set) => ({
 export function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
       {toasts.map((t) => (
         <Toast
           key={t.id}
