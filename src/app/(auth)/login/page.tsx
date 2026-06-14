@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../hook/useAuth';
 import { Eye, EyeOff, Mail, Lock, Calendar } from 'lucide-react';
+import type { User } from '@/lib/types';
+
+function getPostLoginPath(user?: User) {
+  return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+    ? '/admin/dashboard'
+    : '/calendar';
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,8 +18,14 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { currentUser, login, isLoading, isCheckingSession } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isCheckingSession && currentUser) {
+      router.replace(getPostLoginPath(currentUser));
+    }
+  }, [currentUser, isCheckingSession, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +45,7 @@ export default function LoginPage() {
 
     // Use replace so the login page is removed from the history stack
     // and the user cannot navigate back to it via the browser back button.
-    const user = result.user;
-    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
-      router.replace('/admin/dashboard');
-    } else {
-      router.replace('/calendar');
-    }
+    router.replace(getPostLoginPath(result.user));
   };
 
   return (
