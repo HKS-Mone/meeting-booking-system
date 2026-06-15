@@ -20,16 +20,6 @@ export interface User {
   createdAt: string;
 }
 
-export interface Room {
-  id: string;
-  name: string;
-  capacity: number;
-  floor: number;
-  roomType: string;
-  status: RoomStatus;
-  imageUrl?: string;
-  facilities: string[];
-}
 
 export interface Booking {
   id: string;
@@ -37,13 +27,12 @@ export interface Booking {
   userId: string;
   user?: User;
   roomId: string;
-  room?: Room;
   departmentId: string;
   department?: Department;
   purpose: string;
   participants: number;
-  startTime: string; // ISO string
-  endTime: string;   // ISO string
-  date: string;      // ISO date string YYYY-MM-DD
+  startTime: string; 
+  endTime: string;   
+  date: string;      
   createdAt: string;
 }

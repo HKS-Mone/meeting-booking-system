@@ -56,13 +56,9 @@ async function getAuthenticatedUserId(): Promise<number | null> {
 }
 
 /**
- * Convert a date string + time string into a single Date object.
- * date: "YYYY-MM-DD", time: "HH:MM"
- *
- * IMPORTANT: We append 'Z' so that Node.js always parses this as UTC.
- * MySQL @db.Date / @db.Time columns have no timezone; Prisma stores exactly
- * the UTC value from the Date object. Without 'Z', Node.js would interpret
- * the string using the *server's* local timezone, shifting the stored time.
+ * Build a UTC Date for Prisma writes to MySQL DATE/TIME columns.
+ * MySQL DATE and TIME have no timezone, so using UTC components prevents the
+ * Node.js server timezone from changing the selected calendar day or clock time.
  */
 function buildDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time}:00Z`);
@@ -90,10 +86,10 @@ function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
 
-function combineDateAndTime(date: Date, time: Date): Date {
+function combineDateAndTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);
-  return new Date(`${datePart}T${timePart}.000Z`);
+  return `${datePart}T${timePart}`;
 }
 
 /** Map a Prisma Booking row (with relations) to the app's Booking type. */
@@ -123,8 +119,8 @@ function toSafeBooking(row: Awaited<ReturnType<typeof BookingRepository.findById
       : undefined,
     purpose: row.description ?? '',
     participants: 1,     // no participants column in schema yet
-    startTime: combineDateAndTime(row.date, row.startTime).toISOString(),
-    endTime: combineDateAndTime(row.date, row.endTime).toISOString(),
+    startTime: combineDateAndTime(row.date, row.startTime),
+    endTime: combineDateAndTime(row.date, row.endTime),
     date: row.date.toISOString().slice(0, 10),
     createdAt: row.createdAt.toISOString(),
   };

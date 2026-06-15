@@ -7,8 +7,17 @@ export function cn(...classes: (string | undefined | null | false | 0)[]) {
 }
 
 // ─── Date / Time formatters ───────────────────────────────────────────────────
+export function parseDateOnly(date: string): Date {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function parseDisplayDate(value: string): Date {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? parseDateOnly(value) : new Date(value);
+}
+
 export function formatDate(iso: string): string {
-  return format(new Date(iso), 'MMM dd, yyyy');
+  return format(parseDisplayDate(iso), 'MMM dd, yyyy');
 }
 
 export function formatTime(iso: string): string {
@@ -16,7 +25,7 @@ export function formatTime(iso: string): string {
 }
 
 export function formatDateShort(iso: string): string {
-  return format(new Date(iso), 'MMM dd');
+  return format(parseDisplayDate(iso), 'MMM dd');
 }
 
 export function formatMonthYear(date: Date): string {
