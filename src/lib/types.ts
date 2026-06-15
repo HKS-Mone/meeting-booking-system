@@ -20,6 +20,16 @@ export interface User {
   createdAt: string;
 }
 
+export interface Room {
+  id: string;
+  name: string;
+  capacity: number;
+  floor: number;
+  roomType: string;
+  status: RoomStatus;
+  imageUrl?: string;
+  facilities: string[];
+}
 
 export interface Booking {
   id: string;
@@ -27,12 +37,13 @@ export interface Booking {
   userId: string;
   user?: User;
   roomId: string;
+  room?: Room;
   departmentId: string;
   department?: Department;
   purpose: string;
   participants: number;
-  startTime: string; 
-  endTime: string;   
-  date: string;      
+  startTime: string; // Local date-time string, e.g. 2026-06-15T09:00:00
+  endTime: string;   // Local date-time string, e.g. 2026-06-15T10:00:00
+  date: string;      // Date-only string, e.g. 2026-06-15
   createdAt: string;
 }

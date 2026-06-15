@@ -13,6 +13,14 @@ type BookingUpdateData = {
   endTime?: Date;
 };
 
+type ParsedTime = {
+  hours: number;
+  minutes: number;
+};
+
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const TIME_ONLY_PATTERN = /^(\d{2}):(\d{2})$/;
+
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export interface CreateBookingInput {
@@ -55,18 +63,55 @@ async function getAuthenticatedUserId(): Promise<number | null> {
   return Number(result.user.id);
 }
 
-/**
- * Build a UTC Date for Prisma writes to MySQL DATE/TIME columns.
- * MySQL DATE and TIME have no timezone, so using UTC components prevents the
- * Node.js server timezone from changing the selected calendar day or clock time.
- */
-function buildDateTime(date: string, time: string): Date {
-  return new Date(`${date}T${time}:00Z`);
+function parseDateOnly(value: string): Date | null {
+  const match = DATE_ONLY_PATTERN.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
 }
 
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
+function parseTimeOnly(value: string): ParsedTime | null {
+  const match = TIME_ONLY_PATTERN.exec(value);
+  if (!match) return null;
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+
+  return { hours, minutes };
+}
+
+function timeOnlyToDbDate(time: ParsedTime): Date {
+  return new Date(Date.UTC(1970, 0, 1, time.hours, time.minutes, 0, 0));
+}
+
+function dbDateToDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function dbTimeToTimeOnly(time: Date): string {
+  return [
+    String(time.getUTCHours()).padStart(2, '0'),
+    String(time.getUTCMinutes()).padStart(2, '0'),
+    String(time.getUTCSeconds()).padStart(2, '0'),
+  ].join(':');
+}
+
+function timeToMinutes(time: ParsedTime): number {
+  return time.hours * 60 + time.minutes;
 }
 
 function dateTimeToMinutes(time: Date): number {
@@ -87,8 +132,8 @@ function errorMessage(err: unknown, fallback: string): string {
 }
 
 function combineDateAndTime(date: Date, time: Date): string {
-  const datePart = date.toISOString().slice(0, 10);
-  const timePart = time.toISOString().slice(11, 19);
+  const datePart = dbDateToDateOnly(date);
+  const timePart = dbTimeToTimeOnly(time);
   return `${datePart}T${timePart}`;
 }
 
@@ -121,7 +166,7 @@ function toSafeBooking(row: Awaited<ReturnType<typeof BookingRepository.findById
     participants: 1,     // no participants column in schema yet
     startTime: combineDateAndTime(row.date, row.startTime),
     endTime: combineDateAndTime(row.date, row.endTime),
-    date: row.date.toISOString().slice(0, 10),
+    date: dbDateToDateOnly(row.date),
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -154,10 +199,8 @@ export async function getMyBookingsAction(): Promise<BookingsResult> {
 /** Return bookings for a given calendar date (YYYY-MM-DD). */
 export async function getBookingsByDateAction(dateStr: string): Promise<BookingsResult> {
   try {
-    // Append 'T00:00:00Z' so the date is parsed as UTC midnight, which is
-    // consistent with how we store dates (MySQL @db.Date, written as UTC).
-    const date = new Date(`${dateStr}T00:00:00Z`);
-    if (isNaN(date.getTime())) return { success: false, error: 'Invalid date.' };
+    const date = parseDateOnly(dateStr);
+    if (!date) return { success: false, error: 'Invalid date.' };
 
     const rows = await BookingRepository.findByDate(date);
     return { success: true, bookings: rows.map((r) => toSafeBooking(r)) };
@@ -175,16 +218,21 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     if (!input.date) return { success: false, error: 'Date is required.' };
     if (!input.startTime || !input.endTime) return { success: false, error: 'Start and end time are required.' };
 
-    // Append time+Z so the date is always treated as UTC midnight (consistent
-    // with @db.Date storage via Prisma).
-    const date = new Date(`${input.date}T00:00:00Z`);
-    if (isNaN(date.getTime())) return { success: false, error: 'Invalid date.' };
-    if (timeToMinutes(input.startTime) >= timeToMinutes(input.endTime)) {
+    const date = parseDateOnly(input.date);
+    if (!date) return { success: false, error: 'Invalid date.' };
+
+    const startTimeParts = parseTimeOnly(input.startTime);
+    const endTimeParts = parseTimeOnly(input.endTime);
+    if (!startTimeParts || !endTimeParts) {
+      return { success: false, error: 'Invalid time.' };
+    }
+
+    if (timeToMinutes(startTimeParts) >= timeToMinutes(endTimeParts)) {
       return { success: false, error: 'End time must be after start time.' };
     }
 
-    const startTime = buildDateTime(input.date, input.startTime);
-    const endTime = buildDateTime(input.date, input.endTime);
+    const startTime = timeOnlyToDbDate(startTimeParts);
+    const endTime = timeOnlyToDbDate(endTimeParts);
     const targetUserId = input.userId ? Number(input.userId) : sessionUserId;
     const overlappingBooking = await BookingRepository.findOverlapping(date, startTime, endTime);
 
@@ -227,21 +275,28 @@ export async function updateBookingAction(
     if (input.description !== undefined) data.description = normalizeDescription(input.description);
 
     // Resolve date and time changes together so we can validate the pair
-    const dateStr = input.date ?? existing.date.toISOString().slice(0, 10);
-    const nextStartTime = input.startTime ? buildDateTime(dateStr, input.startTime) : existing.startTime;
-    const nextEndTime = input.endTime ? buildDateTime(dateStr, input.endTime) : existing.endTime;
-    const nextDate = new Date(`${dateStr}T00:00:00Z`);
+    const dateStr = input.date ?? dbDateToDateOnly(existing.date);
+    const nextDate = parseDateOnly(dateStr);
 
-    if (isNaN(nextDate.getTime())) return { success: false, error: 'Invalid date.' };
+    if (!nextDate) return { success: false, error: 'Invalid date.' };
+
+    const nextStartTimeParts = input.startTime ? parseTimeOnly(input.startTime) : null;
+    const nextEndTimeParts = input.endTime ? parseTimeOnly(input.endTime) : null;
+    if ((input.startTime && !nextStartTimeParts) || (input.endTime && !nextEndTimeParts)) {
+      return { success: false, error: 'Invalid time.' };
+    }
+
+    const nextStartTime = nextStartTimeParts ? timeOnlyToDbDate(nextStartTimeParts) : existing.startTime;
+    const nextEndTime = nextEndTimeParts ? timeOnlyToDbDate(nextEndTimeParts) : existing.endTime;
 
     if (input.date) data.date = nextDate;
     if (input.startTime) data.startTime = nextStartTime;
     if (input.endTime) data.endTime = nextEndTime;
 
     if (
-      input.startTime &&
-      input.endTime &&
-      timeToMinutes(input.startTime) >= timeToMinutes(input.endTime)
+      nextStartTimeParts &&
+      nextEndTimeParts &&
+      timeToMinutes(nextStartTimeParts) >= timeToMinutes(nextEndTimeParts)
     ) {
       return { success: false, error: 'End time must be after start time.' };
     }
