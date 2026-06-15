@@ -16,10 +16,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentUser, login, isLoading, isCheckingSession } = useAuth();
   const router = useRouter();
+  const isLoginPending = isLoading || isSubmitting;
 
   useEffect(() => {
     if (!isCheckingSession && currentUser) {
@@ -29,6 +30,11 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLoginPending) {
+      return;
+    }
+
     setError('');
 
     if (!email) { setError('Email is required.'); return; }
@@ -36,10 +42,12 @@ export default function LoginPage() {
     if (!password) { setError('Password is required.'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
 
+    setIsSubmitting(true);
     const result = await login({ email, password });
 
     if (!result.success) {
       setError(result.error ?? 'Login failed.');
+      setIsSubmitting(false);
       return;
     }
 
@@ -173,10 +181,10 @@ export default function LoginPage() {
             <button
               type="submit"
               id="login-btn"
-              disabled={isLoading}
+              disabled={isLoginPending}
               className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isLoginPending ? (
                 <>
                   <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
