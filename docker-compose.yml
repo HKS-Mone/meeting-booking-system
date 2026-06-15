@@ -1,0 +1,57 @@
+services:
+  # ─── MySQL Database ──────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: booking_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - booking_network
+
+  # ─── Next.js Application ─────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Passed to the builder stage so Prisma can resolve types
+        DATABASE_URL: ${DATABASE_URL}
+    container_name: booking_app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      # Set to your server's URL. Use http:// if you don't have TLS/HTTPS —
+      # this prevents the auth cookie from being set with Secure flag over HTTP.
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      # Secret used to sign JWT tokens. Change this to a strong random value.
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - booking_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  booking_network:
+    driver: bridge

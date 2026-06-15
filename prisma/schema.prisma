@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+  SUPER_ADMIN
+}
+
+model Department {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  users     User[]
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model User {
+  id           Int         @id @default(autoincrement())
+  name         String
+  email        String      @unique
+  role         Role        @default(EMPLOYEE)
+  password     String?
+  departmentId Int?
+  isActive     Boolean?    @default(true)
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  bookings     Booking[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([departmentId])
+}
+
+model Booking {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  departmentId Int
+  description  String?
+  date         DateTime   @db.Date
+  startTime    DateTime   @db.Time(0)
+  endTime      DateTime   @db.Time(0)
+  isActive     Boolean?   @default(true)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([date])
+  @@index([userId])
+  @@index([departmentId])
+  @@index([startTime, endTime])
+}
