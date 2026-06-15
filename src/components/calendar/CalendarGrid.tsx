@@ -7,7 +7,7 @@ import {
 } from 'date-fns';
 import { Booking } from '@/lib/types';
 import CalendarEventChip from './CalendarEventChip';
-import { getEventColor, formatTime, getMeetingStatus, getDurationLabel } from '@/lib/utils';
+import { getEventColor, formatTime, getMeetingStatus, getDurationLabel, parseDateOnly } from '@/lib/utils';
 import { X, CalendarDays, Clock, Building2 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 
@@ -64,7 +64,7 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
   const days       = eachDayOfInterval({ start: calStart, end: calEnd });
 
   const getBookingsForDay = (day: Date) =>
-    bookings.filter((b) => isSameDay(new Date(b.date), day));
+    bookings.filter((b) => isSameDay(parseDateOnly(b.date), day));
 
   // Bookings for popup
   const selectedDayBookings = selectedDay ? getBookingsForDay(selectedDay) : [];

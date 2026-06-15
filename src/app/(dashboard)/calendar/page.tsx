@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import CalendarGrid from '@/components/calendar/CalendarGrid';
-import { formatMonthYear } from '@/lib/utils';
+import { formatMonthYear, parseDateOnly } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, subMonths } from 'date-fns';
 import type { Booking } from '@/lib/types';
@@ -42,7 +42,7 @@ export default function CalendarPage() {
   const monthBookings = useMemo(
     () =>
       bookings.filter((booking) => {
-        const bookingDate = new Date(booking.date);
+        const bookingDate = parseDateOnly(booking.date);
         return (
           bookingDate.getFullYear() === currentDate.getFullYear() &&
           bookingDate.getMonth() === currentDate.getMonth()

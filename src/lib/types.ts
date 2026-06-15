@@ -42,8 +42,8 @@ export interface Booking {
   department?: Department;
   purpose: string;
   participants: number;
-  startTime: string; // ISO string
-  endTime: string;   // ISO string
-  date: string;      // ISO date string YYYY-MM-DD
+  startTime: string; // Local date-time string, e.g. 2026-06-15T09:00:00
+  endTime: string;   // Local date-time string, e.g. 2026-06-15T10:00:00
+  date: string;      // Date-only string, e.g. 2026-06-15
   createdAt: string;
 }
