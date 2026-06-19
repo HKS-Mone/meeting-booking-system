@@ -24,7 +24,7 @@ const navLinks = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout } = useAuth({ checkSessionOnMount: false });
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore();
   const router = useRouter();
 
