@@ -4,10 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 import { authService, type LoginCredentials } from "@/services/auth.service";
 
-export function useAuth() {
+interface UseAuthOptions {
+  checkSessionOnMount?: boolean;
+}
+
+export function useAuth({ checkSessionOnMount = true }: UseAuthOptions = {}) {
   const { currentUser, setCurrentUser, logout: clearAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [isCheckingSession, setIsCheckingSession] = useState(checkSessionOnMount);
   const [error, setError] = useState<string | null>(null);
   const sessionRequestId = useRef(0);
 
@@ -50,8 +54,12 @@ export function useAuth() {
   }, [clearAuth, setCurrentUser]);
 
   useEffect(() => {
+    if (!checkSessionOnMount) {
+      return;
+    }
+
     void Promise.resolve().then(refreshSession);
-  }, [refreshSession]);
+  }, [checkSessionOnMount, refreshSession]);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {

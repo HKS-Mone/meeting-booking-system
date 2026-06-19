@@ -18,7 +18,9 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentUser, login, isLoading, isCheckingSession } = useAuth();
+  const { currentUser, login, isLoading, isCheckingSession } = useAuth({
+    checkSessionOnMount: false,
+  });
   const router = useRouter();
   const isLoginPending = isLoading || isSubmitting;
 
