@@ -32,7 +32,7 @@ const adminLinks = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout } = useAuth({ checkSessionOnMount: false });
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore();
   const router = useRouter();
 
