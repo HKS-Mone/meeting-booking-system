@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, format, isSameMonth, isToday, isSameDay,
@@ -41,6 +42,18 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
   const [closing, setClosing]         = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Portal container — mounts once on client so position:fixed is viewport-relative
+  const portalRef = useRef<HTMLDivElement | null>(null);
+  const [portalMounted, setPortalMounted] = useState(false);
+  useEffect(() => {
+    const el = document.createElement('div');
+    el.id = 'calendar-popup-portal';
+    document.body.appendChild(el);
+    portalRef.current = el;
+    setPortalMounted(true);
+    return () => { document.body.removeChild(el); };
+  }, []);
+
   // Dismiss: trigger exit animation, then clear the day after it finishes
   const handleClose = () => {
     setClosing(true);
@@ -56,6 +69,16 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     };
   }, []);
+
+  // Lock body scroll while popup is open
+  useEffect(() => {
+    if (selectedDay) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedDay]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd   = endOfMonth(currentDate);
@@ -164,29 +187,30 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
         </div>
       </div>
 
-      {/* ── Day popup overlay ─────────────────────────────────────────────── */}
-      {(selectedDay || closing) && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      {/* ── Day popup overlay — rendered via portal to escape sidebar stacking context ── */}
+      {portalMounted && portalRef.current && (selectedDay || closing) && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
           {/* Backdrop — fades in/out */}
           <div
             className={`absolute inset-0 bg-black/40 backdrop-blur-sm ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
             onClick={handleClose}
           />
 
-          {/* Panel — slides up on mobile, scales in/out on desktop */}
+          {/* Panel — centered on all screen sizes */}
           <div
             className={`
-              relative w-full sm:max-w-lg bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden
-              ${closing
-                ? 'animate-slide-up sm:animate-scale-out'
-                : 'animate-slide-up sm:animate-scale-in'
-              }
+              relative w-full max-w-[calc(100%-0rem)] sm:max-w-lg
+              bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden
+              ${closing ? 'animate-scale-out' : 'animate-scale-in'}
             `}
-            style={{ maxHeight: '88vh' }}
+            style={{ maxHeight: 'calc(100dvh - 2rem)' }}
           >
             {/* Header */}
             <div
-              className="px-5 py-4 flex items-start justify-between"
+              className="px-5 py-4 flex items-start justify-between flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' }}
             >
               <div>
@@ -213,8 +237,8 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
               </button>
             </div>
 
-            {/* Body */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(88vh - 84px)' }}>
+            {/* Body — scrollable */}
+            <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(100dvh - 2rem - 84px)' }}>
               {selectedDayBookings.length === 0 ? (
                 /* ── Empty state ── */
                 <div className="flex flex-col items-center justify-center py-14 px-6 text-center animate-fade-in-up">
@@ -324,7 +348,8 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        portalRef.current,
       )}
     </>
   );
