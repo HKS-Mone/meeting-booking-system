@@ -53,9 +53,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Use replace so the login page is removed from the history stack
-    // and the user cannot navigate back to it via the browser back button.
-    router.replace(getPostLoginPath(result.user));
+    window.location.replace(getPostLoginPath(result.user));
   };
 
   return (
