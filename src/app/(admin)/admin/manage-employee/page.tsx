@@ -16,7 +16,7 @@ import { useToastStore } from '@/components/ui/Toast';
 interface UserForm {
   name: string;
   email: string;
-  role: 'EMPLOYEE';
+  role: 'EMPLOYEE' | 'ADMIN' | 'SUPER_ADMIN';
   departmentId: string;
   password: string;
 }
@@ -110,17 +110,23 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Access</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-          {/* Role — locked */}
+          {/* Role selector */}
           <div className="space-y-1.5">
-            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <label htmlFor="form-user-role" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
-              Role
+              Role <span className="text-red-400">*</span>
             </label>
-            <div className="flex items-center gap-2.5 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
-              <span className="flex-1 text-sm font-semibold text-blue-700">Employee</span>
-              <span className="text-xs text-blue-400 select-none">Locked</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-300" />
-            </div>
+            <select
+              id="form-user-role"
+              value={form.role}
+              onChange={(e) => onChange({ role: e.target.value as UserForm['role'] })}
+              className={`${inputCls} appearance-none`}
+              style={selectStyle}
+            >
+              <option value="EMPLOYEE">Employee</option>
+              <option value="ADMIN">Admin</option>
+              <option value="SUPER_ADMIN">Super Admin</option>
+            </select>
           </div>
 
           {/* Department */}
@@ -316,12 +322,12 @@ export default function ManageUsersPage() {
   };
 
   const openEdit = (u: User) => {
-    setForm({ 
-      name: u.name, 
-      email: u.email, 
-      role: 'EMPLOYEE', 
-      departmentId: u.departmentId ?? departments[0]?.id ?? '', 
-      password: '' 
+    setForm({
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      departmentId: u.departmentId ?? departments[0]?.id ?? '',
+      password: '',
     });
     setShowPassword(false);
     setEditUser(u);
@@ -355,7 +361,7 @@ export default function ManageUsersPage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-                style={{ background: u.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
+                style={{ background: u.role === 'SUPER_ADMIN' ? 'linear-gradient(135deg,#7f1d1d,#dc2626)' : u.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
               >
                 {initials(u.name)}
               </div>
@@ -363,8 +369,8 @@ export default function ManageUsersPage() {
                 <p className="font-semibold text-gray-800 text-sm truncate">{u.name}</p>
                 <p className="text-xs text-gray-500 truncate">{u.email}</p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                {u.role === 'ADMIN' ? 'Admin' : 'Employee'}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${u.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-700' : u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                {u.role === 'SUPER_ADMIN' ? 'Super Admin' : u.role === 'ADMIN' ? 'Admin' : 'Employee'}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500">
@@ -411,7 +417,7 @@ export default function ManageUsersPage() {
                     <div className="flex items-center gap-2.5">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                        style={{ background: u.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
+                        style={{ background: u.role === 'SUPER_ADMIN' ? 'linear-gradient(135deg,#7f1d1d,#dc2626)' : u.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
                       >
                         {initials(u.name)}
                       </div>
@@ -420,8 +426,8 @@ export default function ManageUsersPage() {
                   </td>
                   <td className="px-4 py-3.5 md:py-4 text-gray-500 text-xs">{u.email}</td>
                   <td className="px-4 py-3.5 md:py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {u.role === 'ADMIN' ? 'Admin' : 'Employee'}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-700' : u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {u.role === 'SUPER_ADMIN' ? 'Super Admin' : u.role === 'ADMIN' ? 'Admin' : 'Employee'}
                     </span>
                   </td>
                   <td className="px-4 py-3.5 md:py-4 text-gray-600 text-sm">{u.department?.name ?? '—'}</td>
@@ -519,7 +525,7 @@ export default function ManageUsersPage() {
             <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-                style={{ background: deleteUser.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
+                style={{ background: deleteUser.role === 'SUPER_ADMIN' ? 'linear-gradient(135deg,#7f1d1d,#dc2626)' : deleteUser.role === 'ADMIN' ? 'linear-gradient(135deg,#6d28d9,#9333ea)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}
               >
                 {initials(deleteUser.name)}
               </div>

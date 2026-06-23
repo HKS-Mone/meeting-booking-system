@@ -1,283 +1,316 @@
-Booking System
+# Booking System
 
-Getting Started
-1. Clone the Repository
+A meeting booking system built with Next.js App Router. The application lets employees book meeting time slots, view their booking history, and manage a shared calendar. Admin users get additional dashboards for bookings, users, reports, and settings.
+
+## Features
+
+- JWT cookie-based authentication with protected dashboard layouts
+- Role-based redirects for employees, admins, and super admins
+- Calendar view for booking availability
+- Booking creation, update, soft delete, and overlap validation
+- Employee booking history
+- Admin dashboard with booking and department statistics
+- Admin booking management and user management screens
+- MySQL persistence through Prisma ORM
+- Docker and Docker Compose support for production-style local hosting
+- GitHub Actions deployment workflow over SSH
+
+## Technology Stack
+
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js 16 App Router |
+| UI | React 19, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Forms | React Hook Form, Zod |
+| State | Zustand |
+| Charts | Recharts |
+| Icons | Lucide React |
+| Database | MySQL 8 |
+| ORM | Prisma 6 |
+| Runtime | Node.js 20 |
+| Deployment | Docker, Docker Compose, GitHub Actions |
+
+## Requirements
+
+- Node.js 20 or newer
+- npm
+- MySQL 8, or Docker with Docker Compose
+
+## Getting Started
+
+1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/booking-system.git
 cd booking-system
 ```
-2. Install Dependencies
+
+2. Install dependencies:
+
 ```bash
 npm install
 ```
-3. Configure Environment Variables
+
+3. Create the environment file:
+
 ```bash
 cp .env.example .env
 ```
-Open `.env` and fill in your values:
+
+4. Update `.env` for your local setup. For a local MySQL server outside Docker, use a localhost database URL:
+
 ```env
-DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/booking_db"
-JWT_SECRET="your-jwt-secret"
-NEXTAUTH_SECRET="your-nextauth-secret"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-REDIS_URL="redis://localhost:6379"
-RESEND_API_KEY="your-resend-api-key"
-NODE_ENV="development"
+DATABASE_URL="mysql://root:1234@localhost:3306/booking_system"
+MYSQL_ROOT_PASSWORD=1234
+MYSQL_DATABASE=booking_system
+MYSQL_USER=booking_user
+MYSQL_PASSWORD=booking_password
+NEXTAUTH_URL=http://localhost:3000
+JWT_SECRET=change-me-to-a-long-random-secret
 ```
-4. Set Up the Database
+
+5. Generate Prisma Client and run migrations:
+
 ```bash
-# Run all migrations
-npx prisma migrate dev
-
-# Generate Prisma client
-npx prisma generate
-
-# Seed initial data (optional)
-npx prisma db seed
+npm run db:generate
+npm run db:migrate
 ```
-5. Start the Development Server
+
+6. Seed the database:
+
+```bash
+npm run db:seed
+```
+
+Seeded admin account:
+
+```text
+Email: admin@mone.com
+Password: admin123
+```
+
+7. Start the development server:
+
 ```bash
 npm run dev
 ```
-Open http://localhost:3000 in your browser.
----
-Project Structure
+
+Open `http://localhost:3000`.
+
+## Docker Setup
+
+For Docker Compose, keep the default `.env.example` style database URL because the app container connects to the MySQL service by service name:
+
+```env
+DATABASE_URL="mysql://root:1234@db:3306/booking_system"
+NEXTAUTH_URL=http://localhost:3000
+JWT_SECRET=change-me-to-a-long-random-secret
 ```
-booking-system/
-├── prisma/
-│   ├── schema.prisma           ← Database schema
-│   ├── seed.ts                 ← Dev seed data
-│   └── migrations/             ← Auto-generated migrations
-│
-├── public/
-│   ├── icons/
-│   └── images/
-│
-├── src/
-│   ├── app/                    ← Next.js App Router
-│   │   ├── (auth)/             ← Auth pages (no dashboard layout)
-│   │   │   ├── login/
-│   │   │   └── register/
-│   │   ├── (dashboard)/        ← Protected pages (shared layout)
-│   │   │   ├── layout.tsx
-│   │   │   ├── overview/
-│   │   │   ├── bookings/
-│   │   │   ├── rooms/
-│   │   │   └── admin/
-│   │   ├── api/                ← REST API endpoints
-│   │   │   ├── auth/
-│   │   │   ├── bookings/
-│   │   │   ├── rooms/
-│   │   │   ├── users/
-│   │   │   └── reports/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── components/             ← UI components
-│   │   ├── ui/                 ← Reusable atoms (Button, Input, Modal)
-│   │   ├── forms/              ← Form components with validation
-│   │   ├── layout/             ← Sidebar, Header, Footer
-│   │   ├── bookings/           ← Booking-specific components
-│   │   ├── rooms/              ← Room-specific components
-│   │   └── dashboard/          ← Dashboard widgets
-│   │
-│   ├── lib/                    ← Backend utilities (no React)
-│   │   ├── prisma.ts           ← Prisma client singleton
-│   │   ├── auth.ts             ← JWT helpers
-│   │   ├── hash.ts             ← bcrypt helpers
-│   │   ├── mailer.ts           ← Email setup
-│   │   ├── pdf.ts              ← PDF generation
-│   │   └── response.ts         ← Standard API responses
-│   │
-│   ├── services/               ← Business logic and DB queries
-│   │   ├── auth.service.ts
-│   │   ├── booking.service.ts
-│   │   ├── room.service.ts
-│   │   ├── user.service.ts
-│   │   └── report.service.ts
-│   │
-│   ├── hooks/                  ← Custom React hooks
-│   │   ├── useAuth.ts
-│   │   ├── useBookings.ts
-│   │   ├── useRooms.ts
-│   │   └── useDebounce.ts
-│   │
-│   ├── store/                  ← Zustand global state
-│   │   ├── authStore.ts
-│   │   └── bookingStore.ts
-│   │
-│   ├── middleware/             ← API route guards
-│   │   └── withAuth.ts
-│   ├── middleware.ts           ← Next.js edge middleware
-│   │
-│   ├── types/                  ← TypeScript type definitions
-│   │   ├── index.ts
-│   │   ├── auth.types.ts
-│   │   ├── booking.types.ts
-│   │   └── api.types.ts
-│   │
-│   ├── validations/            ← Zod schemas
-│   │   ├── auth.schema.ts
-│   │   ├── booking.schema.ts
-│   │   └── room.schema.ts
-│   │
-│   └── constants/              ← App-wide constants
-│       ├── roles.ts
-│       ├── status.ts
-│       └── routes.ts
-│
-├── .env                        ← Local environment (never commit)
-├── .env.example                ← Environment variable template
-├── .eslintrc.json
-├── .gitignore
-├── next.config.js
-├── tailwind.config.ts
-├── tsconfig.json
-└── package.json
-```
----
-Data Flow Architecture
-Every request follows this strict path. Never skip a layer.
-```
-Browser / Client
-      |
-      | HTTP Request
-      v
-app/api/[resource]/route.ts     ← Validate input, call service
-      |
-      v
-services/[resource].service.ts  ← All business logic and DB queries
-      |
-      v
-lib/prisma.ts                   ← Single database connection
-      |
-      v
-PostgreSQL Database
-```
----
-User Roles
-Role	Access
-`ADMIN`	Full access: users, rooms, bookings, reports, settings
-`MANAGER`	Manage bookings and rooms within their department
-`STAFF`	Create and manage their own bookings
----
-API Endpoints
-Authentication
-Method	Endpoint	Description
-POST	`/api/auth/register`	Register new user
-POST	`/api/auth/login`	Login and receive JWT
-POST	`/api/auth/logout`	Invalidate session
-POST	`/api/auth/refresh`	Refresh access token
-Bookings
-Method	Endpoint	Description
-GET	`/api/bookings`	List all bookings
-POST	`/api/bookings`	Create new booking
-GET	`/api/bookings/[id]`	Get single booking
-PATCH	`/api/bookings/[id]`	Update booking
-DELETE	`/api/bookings/[id]`	Cancel booking
-Rooms
-Method	Endpoint	Description
-GET	`/api/rooms`	List all rooms
-POST	`/api/rooms`	Create new room
-GET	`/api/rooms/[id]`	Get single room
-PATCH	`/api/rooms/[id]`	Update room
-DELETE	`/api/rooms/[id]`	Remove room
-Users
-Method	Endpoint	Description
-GET	`/api/users`	List all users (Admin only)
-GET	`/api/users/[id]`	Get user profile
-PATCH	`/api/users/[id]`	Update user
-DELETE	`/api/users/[id]`	Remove user (Admin only)
-Reports
-Method	Endpoint	Description
-GET	`/api/reports`	Generate usage reports
----
-Available Scripts
+
+Start the app and database:
+
 ```bash
-# Start development server
-npm run dev
+docker compose up -d --build
+```
 
-# Build for production
-npm run build
+The app runs on `http://localhost:3000` and MySQL is exposed on port `3306`.
 
-# Start production server
-npm start
+## Available Scripts
 
-# Run ESLint
-npm run lint
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Build the production app |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Generate Prisma Client |
+| `npm run db:migrate` | Run Prisma migrations in development |
+| `npm run db:seed` | Seed departments, admin user, and sample booking |
 
-# Run Prisma Studio (visual DB browser)
+Useful Prisma commands:
+
+```bash
 npx prisma studio
-
-# Create a new migration
-npx prisma migrate dev --name your_migration_name
-
-# Push schema changes without migration (dev only)
-npx prisma db push
-
-# Seed the database
-npx prisma db seed
-```
----
-Deployment
-Digital Ocean VPS (Recommended)
-```bash
-# On your server after cloning
-npm install
 npx prisma migrate deploy
-npx prisma generate
-npm run build
-pm2 start npm --name "booking-system" -- start
-pm2 save
+npx prisma db push
 ```
-Set up Nginx as a reverse proxy pointing to `http://localhost:3000`.
-Vercel + Neon (Alternative)
-Push code to GitHub
-Import the repository at vercel.com
-Add environment variables in the Vercel dashboard
-Connect a Neon PostgreSQL database
-Vercel deploys automatically on every push to `main`
----
-Environment Variables Reference
-Variable	Required	Description
-`DATABASE_URL`	Yes	PostgreSQL connection string
-`JWT_SECRET`	Yes	Secret key for signing JWTs
-`NEXTAUTH_SECRET`	Yes	Secret for session encryption
-`NEXT_PUBLIC_APP_URL`	Yes	Public URL of your application
-`REDIS_URL`	No	Redis connection string for caching
-`RESEND_API_KEY`	No	Resend API key for email notifications
-`NODE_ENV`	Yes	`development` or `production`
----
-Database Schema Overview
-```
-User
- ├── id, name, email, password, role, department
- └── has many Bookings
 
-Room
- ├── id, name, capacity, location, isActive
- └── has many Bookings
+## Project Structure
+
+```text
+booking-system/
++-- .github/
+|   +-- workflows/
+|       +-- deploy.yml              # SSH deployment workflow
++-- hook/                           # Client-side React hooks
+|   +-- useAdmin.ts
+|   +-- useAuth.ts
+|   +-- useBooking.ts
+|   +-- useUser.ts
++-- prisma/
+|   +-- migrations/                 # Database migrations
+|   +-- schema.prisma               # MySQL schema
+|   +-- seed.ts                     # Initial departments, admin, sample data
++-- public/                         # Static assets
++-- src/
+|   +-- app/                        # Next.js App Router
+|   |   +-- (admin)/                # Protected admin area
+|   |   +-- (auth)/                 # Login layout and actions
+|   |   +-- (dashboard)/            # Employee dashboard area
+|   |   +-- globals.css
+|   |   +-- layout.tsx
+|   |   +-- page.tsx                # Role-aware root redirect
+|   +-- components/
+|   |   +-- admin/                  # Admin tables and management UI
+|   |   +-- booking/                # Booking history UI
+|   |   +-- calendar/               # Calendar grid and event chips
+|   |   +-- dashboard/              # Dashboard cards and charts
+|   |   +-- layout/                 # Sidebars and top bar
+|   |   +-- ui/                     # Shared UI components
+|   +-- lib/                        # Shared types, stores, utilities, Prisma client
+|   +-- repository/                 # Prisma data access layer
+|   +-- services/                   # Server Actions and business logic
++-- docker-compose.yml
++-- Dockerfile
++-- next.config.ts
++-- package.json
++-- tsconfig.json
+```
+
+## Application Routes
+
+| Route | Access | Purpose |
+| --- | --- | --- |
+| `/` | Public | Redirects by session and role |
+| `/login` | Public | Sign in |
+| `/calendar` | Employee | Booking calendar |
+| `/booking-history` | Employee | Current user's booking history |
+| `/settings` | Employee | User settings |
+| `/admin/dashboard` | Admin | Admin summary dashboard |
+| `/admin/calendar` | Admin | Admin calendar view |
+| `/admin/manage-bookings` | Admin | Manage all bookings |
+| `/admin/manage-bookings/add-booking` | Admin | Create a booking from admin area |
+| `/admin/manage-employee` | Admin | Manage employees |
+| `/admin/add-admin` | Admin | Add admin users |
+| `/admin/reports` | Admin | Reports |
+| `/admin/settings` | Admin | Admin settings |
+
+## Roles
+
+| Role | Description |
+| --- | --- |
+| `EMPLOYEE` | Uses the calendar and manages their own bookings |
+| `ADMIN` | Accesses admin pages and booking management |
+| `SUPER_ADMIN` | Highest admin role, seeded by default |
+
+## Data Model
+
+The current Prisma schema uses three main models:
+
+```text
+Department
++-- id, name
++-- users
++-- bookings
+
+User
++-- id, name, email, password
++-- role: EMPLOYEE | ADMIN | SUPER_ADMIN
++-- departmentId
++-- isActive
++-- bookings
 
 Booking
- ├── id, title, description, startTime, endTime, status
- ├── belongs to User
- └── belongs to Room
++-- id, userId, departmentId
++-- description
++-- date
++-- startTime, endTime
++-- isActive
++-- user
++-- department
 ```
----
-Contributing
-Create a feature branch from `main`
+
+Notes:
+
+- Bookings are soft-deleted with `isActive = false`.
+- Booking overlap checks are done before create and update.
+- There is no `Room` table in the current database schema. Some UI types still contain room-related fields for future expansion.
+
+## Architecture
+
+This project uses the Next.js App Router with Server Actions for mutations and reads. There are no REST route handlers for the core booking flow at the moment.
+
+```text
+Browser / React component
+        |
+        v
+hook/use*.ts
+        |
+        v
+src/services/*.service.ts
+        |
+        v
+src/repository/*.repository.ts
+        |
+        v
+src/lib/prisma.ts
+        |
+        v
+MySQL database
+```
+
+Key conventions:
+
+- `src/app` owns routing, layouts, pages, and auth actions.
+- `src/services` contains business rules and Server Actions.
+- `src/repository` contains Prisma queries.
+- `src/lib/prisma.ts` provides the shared Prisma Client.
+- `hook` contains client-side hooks used by pages and components.
+
+## Authentication
+
+Authentication is implemented with a signed JWT stored in an HTTP-only cookie named `auth_token_mone`.
+
+- JWT signing uses `JWT_SECRET`.
+- Session lifetime is 7 days.
+- `NEXTAUTH_URL` controls whether the auth cookie is marked secure in production-like environments.
+- The root page redirects authenticated admins to `/admin/dashboard` and employees to `/calendar`.
+
+## Environment Variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | MySQL connection string used by Prisma |
+| `MYSQL_ROOT_PASSWORD` | Docker | Root password for the Compose MySQL service |
+| `MYSQL_DATABASE` | Docker | Database created by the Compose MySQL service |
+| `MYSQL_USER` | Docker | Optional MySQL application user |
+| `MYSQL_PASSWORD` | Docker | Password for `MYSQL_USER` |
+| `NEXTAUTH_URL` | Yes | Public app URL used for auth cookie behavior |
+| `JWT_SECRET` | Yes | Secret used to sign auth tokens |
+
+## Deployment
+
+The repository includes a GitHub Actions workflow at `.github/workflows/deploy.yml`. On pushes to `main`, it connects to a server over SSH, pulls the latest code, rebuilds Docker containers, and prunes dangling images.
+
+Required GitHub secrets:
+
+| Secret | Description |
+| --- | --- |
+| `HOST` | Server hostname or IP |
+| `USERNAME` | SSH username |
+| `SSH_KEY` | Private key for SSH access |
+
+Server deployment command used by the workflow:
+
 ```bash
-git checkout -b feature/your-feature-name
+docker compose up -d --build --remove-orphans
 ```
-Make your changes and commit
-```bash
-git add .
-git commit -m "add: your feature description"
-```
-Push and open a pull request
-```bash
-git push origin feature/your-feature-name
-```
----
-License
-MIT License. See `LICENSE` for details.
+
+## Development Notes
+
+- Read `node_modules/next/dist/docs/` before changing Next.js-specific behavior. This project uses Next.js 16, which may differ from older examples.
+- Keep database access inside repository classes.
+- Keep booking validation and authorization checks inside service actions.
+- Run `npm run lint` before opening a pull request.
+- Run migrations whenever `prisma/schema.prisma` changes.
