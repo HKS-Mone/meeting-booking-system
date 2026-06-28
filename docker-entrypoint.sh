@@ -8,8 +8,10 @@ const u = new URL(process.env.DATABASE_URL);
 const db = u.pathname.slice(1);
 execFileSync(
   'mysql',
+
   ['-h', u.hostname, '-P', u.port || '3306', '-u', u.username,
-   '-p' + u.password, '-e', 'CREATE DATABASE IF NOT EXISTS `' + db + '`;'],
+   '-p' + u.password, '--skip-ssl',
+   '-e', 'CREATE DATABASE IF NOT EXISTS `' + db + '`;'],
   { stdio: 'inherit' }
 );
 EOF
