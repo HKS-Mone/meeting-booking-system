@@ -47,7 +47,8 @@ RUN node_modules/.bin/tsc prisma/seed.ts \
 # ============================================================
 FROM node:20-alpine AS runner
 
-RUN apk add --no-cache openssl
+# mysql-client is needed by docker-entrypoint.sh to run CREATE DATABASE IF NOT EXISTS.
+RUN apk add --no-cache openssl mysql-client
 
 WORKDIR /app
 
