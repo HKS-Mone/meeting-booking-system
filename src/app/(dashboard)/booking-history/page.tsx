@@ -27,13 +27,27 @@ export default function BookingHistoryPage() {
   const [selected, setSelected] = useState<(typeof bookings)[0] | null>(null);
 
   const filtered = useMemo(() => {
-    return bookings.filter((b) => {
-      const meetingStatus = getMeetingStatus(b.startTime, b.endTime);
-      const matchStatus = !statusFilter || meetingStatus === statusFilter;
-      const matchFrom = !fromDate || b.date >= fromDate;
-      const matchTo = !toDate || b.date <= toDate;
-      return matchStatus && matchFrom && matchTo;
-    });
+    const STATUS_ORDER: Record<MeetingStatus, number> = { ONGOING: 0, UPCOMING: 1, COMPLETE: 2 };
+
+    return bookings
+      .filter((b) => {
+        const meetingStatus = getMeetingStatus(b.startTime, b.endTime);
+        const matchStatus = !statusFilter || meetingStatus === statusFilter;
+        const matchFrom = !fromDate || b.date >= fromDate;
+        const matchTo = !toDate || b.date <= toDate;
+        return matchStatus && matchFrom && matchTo;
+      })
+      .sort((a, b) => {
+        const statusA = getMeetingStatus(a.startTime, a.endTime);
+        const statusB = getMeetingStatus(b.startTime, b.endTime);
+        if (STATUS_ORDER[statusA] !== STATUS_ORDER[statusB]) {
+          return STATUS_ORDER[statusA] - STATUS_ORDER[statusB];
+        }
+        // Within COMPLETE, most recent first; within ONGOING/UPCOMING, soonest first
+        return statusA === 'COMPLETE'
+          ? b.startTime.localeCompare(a.startTime)
+          : a.startTime.localeCompare(b.startTime);
+      });
   }, [statusFilter, fromDate, toDate]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
