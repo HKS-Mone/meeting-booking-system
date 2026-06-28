@@ -1,13 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import {
-  bookings,
-  rooms,
-  departments,
-} from '@/lib/mock-data';
+import { AdminRepository } from '@/repository/admin.repository';
+import { getBookingsAction } from '@/services/booking.service';
 import StatsCard from '@/components/dashboard/StatsCard';
-import RoomStatusDonut from '@/components/dashboard/RoomStatusDonut';
 import TodaysMeetingsTable from '@/components/dashboard/TodaysMeetingsTable';
 import UpcomingMeetings from '@/components/dashboard/UpcomingMeetings';
 
@@ -16,34 +12,28 @@ export const metadata: Metadata = {
   description: 'Administrator overview of bookings, rooms, and departments.',
 };
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const [stats, bookingsResult] = await Promise.all([
+    AdminRepository.getDashboardStats(),
+    getBookingsAction(),
+  ]);
+
+  const allBookings = bookingsResult.bookings ?? [];
   const now = new Date();
   const today = format(now, 'yyyy-MM-dd');
   const thisMonth = format(now, 'yyyy-MM');
-  const todayBookings = bookings.filter((b) => b.date === today);
-  const thisMonthBookings = bookings.filter((b) => b.date.startsWith(thisMonth));
-  const activeNow = bookings.filter((b) => {
+
+  const todayBookings = allBookings.filter((b) => b.date === today);
+  const thisMonthCount = allBookings.filter((b) => b.date.startsWith(thisMonth)).length;
+  const activeNow = allBookings.filter((b) => {
     const start = new Date(b.startTime);
     const end = new Date(b.endTime);
     return start <= now && end >= now;
   });
-
-  const upcoming = bookings.filter((b) => new Date(b.startTime) > now);
-  const recentUpcoming = upcoming
+  const upcoming = allBookings.filter((b) => new Date(b.startTime) > now);
+  const recentUpcoming = [...upcoming]
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
     .slice(0, 6);
-
-  const roomStatus = rooms.reduce(
-    (acc, room) => {
-      acc[room.status] += 1;
-      return acc;
-    },
-    { AVAILABLE: 0, OCCUPIED: 0, MAINTENANCE: 0, OUT_OF_SERVICE: 0 },
-  );
-
-  const recentBookings = [...bookings]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -64,7 +54,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link
-                href="/admin/book-room"
+                href="/admin/manage-bookings/add-booking"
                 className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66] transition hover:bg-slate-100"
               >
                 Book Meeting
@@ -81,19 +71,19 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-4 gap-2 sm:gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur-sm lg:min-w-[400px]">
             <div>
               <p className="text-[10px] sm:text-xs text-blue-100/80">Today</p>
-              <p className="mt-1 text-xl sm:text-2xl font-bold">{todayBookings.length}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-bold">{stats.todaysBookings}</p>
             </div>
             <div>
               <p className="text-[10px] sm:text-xs text-blue-100/80">Active</p>
-              <p className="mt-1 text-xl sm:text-2xl font-bold">{activeNow.length}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-bold">{upcoming.length + activeNow.length}</p>
             </div>
             <div>
-              <p className="text-[10px] sm:text-xs text-blue-100/80">Rooms</p>
-              <p className="mt-1 text-xl sm:text-2xl font-bold">{rooms.length}</p>
+              <p className="text-[10px] sm:text-xs text-blue-100/80">Users</p>
+              <p className="mt-1 text-xl sm:text-2xl font-bold">{stats.totalUsers}</p>
             </div>
             <div>
               <p className="text-[10px] sm:text-xs text-blue-100/80">Depts</p>
-              <p className="mt-1 text-xl sm:text-2xl font-bold">{departments.length}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-bold">{stats.totalDepartments}</p>
             </div>
           </div>
         </div>
@@ -102,22 +92,22 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatsCard
           title="Meetings Today"
-          value={todayBookings.length}
+          value={stats.todaysBookings}
           iconName="Calendar"
           iconColor="text-sky-600"
           iconBg="bg-sky-50"
         />
         <StatsCard
           title="This Month"
-          value={thisMonthBookings.length}
+          value={thisMonthCount}
           iconName="BarChart2"
           iconColor="text-indigo-600"
           iconBg="bg-indigo-50"
         />
         <StatsCard
-          title="Available Booking"
-          value={roomStatus.AVAILABLE}
-          iconName="DoorOpen"
+          title="Active Bookings"
+          value={upcoming.length + activeNow.length}
+          iconName="CheckCircle"
           iconColor="text-emerald-600"
           iconBg="bg-emerald-50"
         />
@@ -138,9 +128,6 @@ export default function AdminDashboardPage() {
                 <h2 className="text-base font-semibold text-slate-900">Today&apos;s meetings</h2>
                 <p className="text-sm text-slate-500">What is happening right now across all rooms.</p>
               </div>
-              <Link href="/admin/calendar" className="text-sm font-medium text-sky-600 hover:text-sky-700">
-                View calendar
-              </Link>
             </div>
             <TodaysMeetingsTable bookings={todayBookings} />
           </section>
@@ -150,10 +137,7 @@ export default function AdminDashboardPage() {
               <div>
                 <h2 className="text-base font-semibold text-slate-900">Upcoming meetings</h2>
                 <p className="text-sm text-slate-500">The next sessions already scheduled in the system.</p>
-              </div>
-              <Link href="/admin/booking-history" className="text-sm font-medium text-sky-600 hover:text-sky-700">
-                Booking history
-              </Link>
+              </div>  
             </div>
             <div className="p-5">
               <UpcomingMeetings bookings={recentUpcoming} />
@@ -162,7 +146,6 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="space-y-6">
-      
           <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="border-b border-slate-100 px-5 py-4">
               <h2 className="text-base font-semibold text-slate-900">Quick snapshot</h2>
@@ -170,7 +153,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-3 p-5 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Total bookings</span>
-                <span className="font-semibold text-slate-900">{bookings.length}</span>
+                <span className="font-semibold text-slate-900">{stats.activeBookings}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Upcoming</span>
@@ -178,11 +161,11 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Departments</span>
-                <span className="font-semibold text-slate-900">{departments.length}</span>
+                <span className="font-semibold text-slate-900">{stats.totalDepartments}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Active now</span>
-                <span className="font-semibold text-slate-900">{activeNow.length}</span>
+                <span className="font-semibold text-slate-900">{upcoming.length + activeNow.length}</span>
               </div>
             </div>
           </section>
@@ -194,7 +177,7 @@ export default function AdminDashboardPage() {
               Review the queue, book available rooms faster, and monitor occupancy from the same panel.
             </p>
             <div className="mt-4 flex flex-wrap gap-2 sm:gap-3">
-              <Link href="/admin/book-room" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66]">
+              <Link href="/admin/manage-bookings/add-booking" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66]">
                 New booking
               </Link>
               <Link href="/admin/manage-bookings" className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">
