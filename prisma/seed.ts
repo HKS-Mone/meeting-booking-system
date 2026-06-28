@@ -25,7 +25,7 @@ async function main() {
   // Seed Users
   const admin = await prisma.user.create({
     data: {
-      name:         'Admin User',
+      name:         'Super Admin',
       email:        'admin@mone.com',
       role:         'SUPER_ADMIN',
       password:     hashPassword('admin123'),
@@ -63,7 +63,7 @@ async function main() {
       {
         userId:       admin.id,
         departmentId: activation.id,
-        description:  'Interview',
+        description:  'Test Booking',
         startTime:    today(9, 30),
         endTime:      today(10, 30),
         date:         dateOnly(0),

@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+CLAUDE.md
 
 # debug
 npm-debug.log*
@@ -36,6 +37,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
+# typescript2
 *.tsbuildinfo
 next-env.d.ts
