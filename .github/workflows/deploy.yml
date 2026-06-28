@@ -18,11 +18,40 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
 
           script: |
+            set -e
             cd /root/meeting-booking-system
 
-            git pull origin main
+            # ── Backup the database BEFORE deploying (point-in-time safety) ──
+            # Runs mysqldump inside the db container so the root password never
+            # appears in the CI logs (it expands from the container's own env).
+            BACKUP_DIR=/var/backups/booking-system
+            mkdir -p "$BACKUP_DIR"
+            BACKUP_FILE="$BACKUP_DIR/booking_$(date +%Y-%m-%d_%H-%M-%S).sql.gz"
 
-            # Rebuild and restart containers (zero-downtime approach)
+            if docker ps --format '{{.Names}}' | grep -q '^booking_db$'; then
+              echo "Backing up database to $BACKUP_FILE ..."
+              docker exec booking_db sh -c \
+                'exec mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" \
+                   --single-transaction --routines --triggers "$MYSQL_DATABASE"' \
+                | gzip > "$BACKUP_FILE"
+
+              # Integrity check: a successful mysqldump ends with "Dump completed".
+              # Aborting here protects data — never deploy without a valid backup.
+              if [ ! -s "$BACKUP_FILE" ] || ! zcat "$BACKUP_FILE" | tail -n 5 | grep -q 'Dump completed'; then
+                echo "❌ Backup failed or is incomplete — aborting deploy."
+                rm -f "$BACKUP_FILE"
+                exit 1
+              fi
+              echo "✅ Backup verified ($(du -h "$BACKUP_FILE" | cut -f1))"
+
+              # Retain backups for 5 days
+              find "$BACKUP_DIR" -name '*.sql.gz' -mtime +5 -delete
+            else
+              echo "ℹ️  booking_db not running (first deploy?) — skipping backup."
+            fi
+
+            # ── Deploy ──
+            git pull origin main
             docker compose pull
             docker compose up -d --build --remove-orphans
 
