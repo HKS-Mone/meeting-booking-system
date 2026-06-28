@@ -21,7 +21,7 @@ export default function UpcomingMeetings({ bookings }: UpcomingMeetingsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
       {bookings.map((b, i) => (
         <div
           key={b.id}
@@ -30,11 +30,7 @@ export default function UpcomingMeetings({ bookings }: UpcomingMeetingsProps) {
           <div className={`h-1.5 ${colors[i % colors.length]}`} />
           <div className="p-4">
             <h4 className="font-semibold text-gray-800 text-sm truncate">{b.purpose}</h4>
-            <div className="mt-2 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span>{b.room?.name}</span>
-              </div>
+            <div className="mt-2 space-y-1.5">       
               <div className="flex items-center gap-1.5 text-xs text-gray-500">
                 <Clock className="w-3.5 h-3.5 shrink-0" />
                 <span>

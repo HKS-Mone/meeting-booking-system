@@ -36,9 +36,8 @@ const WEEKDAYS_LONG  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function CalendarGrid({ currentDate, bookings }: CalendarGridProps) {
-  // selectedDay = the day that is open (or about to close)
-  // closing = true while the exit animation is playing
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
   const [closing, setClosing]         = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -229,11 +228,11 @@ export default function CalendarGrid({ currentDate, bookings }: CalendarGridProp
               <button
                 id="day-popup-close-btn"
                 onClick={handleClose}
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200 shrink-0 ml-4 hover:rotate-90"
+                className="w-12 h-12 rounded-xl flex items-center justify-center bg-white text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0 ml-4 hover:rotate-90"
                 style={{ transition: 'transform 0.2s cubic-bezier(0.34,1.4,0.64,1), color 0.15s ease, background 0.15s ease' }}
                 aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
