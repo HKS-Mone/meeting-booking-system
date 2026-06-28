@@ -8,10 +8,11 @@ function hashPassword(password: string) {
 }
 
 async function main() {
-  // Clean up existing data
-  await prisma.booking.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.department.deleteMany();
+  const existingUsers = await prisma.user.count();
+  if (existingUsers > 0) {
+    console.log('ℹ️  Database already has data — skipping seed.');
+    return;
+  }
 
   // Seed Departments
   const activation    = await prisma.department.create({ data: { name: 'Activation' } });
