@@ -169,7 +169,7 @@ export default function AddAdminPage() {
                                 Add Another
                             </button>
                             <a
-                                href="/admin/manage-users"
+                                href="/admin/manage-employee"
                                 className="flex-1 py-2.5 rounded-xl text-white text-sm font-medium text-center transition-colors flex items-center justify-center gap-1.5"
                                 style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' }}
                             >
