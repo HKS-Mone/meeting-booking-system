@@ -40,7 +40,7 @@ export default function StatsCard({
   iconColor,
   iconBg,
   linkText = 'View all',
-  linkHref = '#',
+  linkHref,
   trend,
 }: StatsCardProps) {
   const Icon = ICON_MAP[iconName];

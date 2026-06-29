@@ -98,6 +98,7 @@ export default async function AdminDashboardPage() {
           iconName="Calendar"
           iconColor="text-sky-600"
           iconBg="bg-sky-50"
+          linkHref="/admin/calendar"
         />
         <StatsCard
           title="This Month"
@@ -105,6 +106,7 @@ export default async function AdminDashboardPage() {
           iconName="BarChart2"
           iconColor="text-indigo-600"
           iconBg="bg-indigo-50"
+          linkHref="/admin/calendar"
         />
         <StatsCard
           title="Active Bookings"
@@ -112,6 +114,7 @@ export default async function AdminDashboardPage() {
           iconName="CheckCircle"
           iconColor="text-emerald-600"
           iconBg="bg-emerald-50"
+          linkHref=""
         />
         <StatsCard
           title="Ongoing Now"
@@ -119,6 +122,7 @@ export default async function AdminDashboardPage() {
           iconName="Video"
           iconColor="text-orange-600"
           iconBg="bg-orange-50"
+          linkHref=""
         />
       </div>
 
