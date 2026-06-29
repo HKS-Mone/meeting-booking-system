@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../../../../hook/useUser';
 import type { User, Department } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
+import { useAuthStore } from '@/lib/auth-store';
 import {
   Pencil, Trash2, Plus, UserCog,
   User as UserIcon, Mail, ShieldCheck, Building2,
@@ -65,9 +66,10 @@ interface FormFieldsProps {
   onTogglePassword: () => void;
   isEdit: boolean;
   departments: Department[];
+  canManageAdminRoles: boolean;
 }
 
-function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments }: Readonly<FormFieldsProps>) {
+function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, canManageAdminRoles }: Readonly<FormFieldsProps>) {
   const pwStrength = getPasswordStrength(form.password);
 
   return (
@@ -124,12 +126,22 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               id="form-user-role"
               value={form.role}
               onChange={(e) => onChange({ role: e.target.value as UserForm['role'] })}
-              className={`${inputCls} appearance-none`}
+              disabled={!canManageAdminRoles}
+              className={`${inputCls} appearance-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
               style={selectStyle}
             >
               <option value="EMPLOYEE">Employee</option>
-              <option value="ADMIN">Admin</option>
-              <option value="SUPER_ADMIN">Super Admin</option>
+              {canManageAdminRoles && (
+                <>
+                  <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                </>
+              )}
+              {!canManageAdminRoles && form.role !== 'EMPLOYEE' && (
+                <option value={form.role}>
+                  {form.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+                </option>
+              )}
             </select>
           </div>
 
@@ -226,6 +238,9 @@ export default function ManageUsersPage() {
     deleteUser: apiDeleteUser,
   } = useUser();
   const addToast = useToastStore((state) => state.addToast);
+  const { currentUser } = useAuthStore();
+  const canManageEmployees = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+  const canManageAdminRoles = currentUser?.role === 'SUPER_ADMIN';
 
   const [addOpen, setAddOpen]     = useState(false);
   const [editUser, setEditUser]   = useState<User | null>(null);
@@ -240,12 +255,23 @@ export default function ManageUsersPage() {
 
   const onChange = (f: Partial<UserForm>) => setForm((prev) => ({ ...prev, ...f }));
   const togglePw = () => setShowPassword((v) => !v);
+  const canDeleteUser = (user: User) => canManageEmployees && (canManageAdminRoles || user.role === 'EMPLOYEE');
   const addForm = addOpen
     ? { ...form, departmentId: form.departmentId || departments[0]?.id || '' }
     : form;
 
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
+    if (!canManageEmployees) {
+      addToast('Only admins can add users.', 'error');
+      return;
+    }
+
+    if (form.role !== 'EMPLOYEE' && !canManageAdminRoles) {
+      addToast('Only super admins can create admin accounts.', 'error');
+      return;
+    }
+
     const departmentId = form.departmentId || departments[0]?.id || '';
     const email = form.email.trim();
 
@@ -296,6 +322,11 @@ export default function ManageUsersPage() {
     if (!editUser) return;
     const email = form.email.trim();
 
+    if (form.role !== editUser.role && !canManageAdminRoles) {
+      addToast('Only super admins can change user roles.', 'error');
+      return;
+    }
+
     if (!email) {
       addToast('Email address is required.', 'error');
       return;
@@ -324,6 +355,18 @@ export default function ManageUsersPage() {
   };
 
   const handleDelete = async (u: User) => {
+    if (!canManageEmployees) {
+      addToast('Only admins can delete users.', 'error');
+      setDeleteUser(null);
+      return;
+    }
+
+    if (u.role !== 'EMPLOYEE' && !canManageAdminRoles) {
+      addToast('Only super admins can delete admin accounts.', 'error');
+      setDeleteUser(null);
+      return;
+    }
+
     try {
       await apiDeleteUser(u.id);
       setDeleteUser(null);
@@ -335,6 +378,11 @@ export default function ManageUsersPage() {
   };
 
   const openAdd = () => {
+    if (!canManageEmployees) {
+      addToast('Only admins can add users.', 'error');
+      return;
+    }
+
     setForm({
       ...EMPTY_FORM,
       departmentId: departments[0]?.id ?? '',
@@ -368,8 +416,10 @@ export default function ManageUsersPage() {
         <button
           id="add-user-btn"
           onClick={openAdd}
-          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
-          style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
+          disabled={!canManageEmployees}
+          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          style={{ background: canManageEmployees ? 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' : '#94a3b8', boxShadow: canManageEmployees ? '0 4px 12px rgba(37,99,235,0.3)' : 'none' }}
+          title={canManageEmployees ? 'Add employee' : 'Only admins can add users'}
         >
           <Plus className="w-4.5 h-4.5" />
           Add Employee
@@ -404,8 +454,10 @@ export default function ManageUsersPage() {
                 className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
                 Edit
               </button>
-              <button id={`delete-user-${u.id}`} onClick={() => setDeleteUser(u)}
-                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+              <button id={`delete-user-${u.id}`} onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast(u.role === 'EMPLOYEE' ? 'Only admins can delete users.' : 'Only super admins can delete admin accounts.', 'error')}
+                disabled={!canDeleteUser(u)}
+                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={canDeleteUser(u) ? 'Delete user' : u.role === 'EMPLOYEE' ? 'Only admins can delete users' : 'Only super admins can delete admin accounts'}>
                 Delete
               </button>
             </div>
@@ -466,9 +518,10 @@ export default function ManageUsersPage() {
                       </button>
                       <button
                         id={`delete-user-${u.id}`}
-                        onClick={() => setDeleteUser(u)}
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
-                        title="Delete user"
+                        onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast(u.role === 'EMPLOYEE' ? 'Only admins can delete users.' : 'Only super admins can delete admin accounts.', 'error')}
+                        disabled={!canDeleteUser(u)}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canDeleteUser(u) ? 'Delete user' : u.role === 'EMPLOYEE' ? 'Only admins can delete users' : 'Only super admins can delete admin accounts'}
                       >
                         <Trash2 className="w-4.5 h-4.5" />
                       </button>
@@ -491,6 +544,7 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={false}
             departments={departments}
+            canManageAdminRoles={canManageAdminRoles}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeAdd} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -519,6 +573,7 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={true}
             departments={departments}
+            canManageAdminRoles={canManageAdminRoles}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeEdit} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">

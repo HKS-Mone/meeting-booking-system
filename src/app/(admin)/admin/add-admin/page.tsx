@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '../../../../../hook/useUser';
+import { useAuthStore } from '@/lib/auth-store';
 import {
     UserPlus,
     User,
@@ -52,8 +53,10 @@ export default function AddAdminPage() {
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof AdminForm, string>>>({});
     const addToast = useToastStore((state) => state.addToast);
+    const { currentUser } = useAuthStore();
 
     const { departments, loadDepartments, createUser } = useUser();
+    const canManageAdmins = currentUser?.role === 'SUPER_ADMIN';
 
     useEffect(() => {
         loadDepartments().catch((err: unknown) => {
@@ -83,6 +86,10 @@ export default function AddAdminPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!canManageAdmins) {
+            addToast('Only super admins can create admin accounts.', 'error');
+            return;
+        }
         if (!validate()) return;
         try {
             await createUser({
@@ -125,6 +132,30 @@ export default function AddAdminPage() {
     };
 
     /* ── Success Screen ─────────────────────────────────────────────────────── */
+    if (!canManageAdmins) {
+        return (
+            <div className="space-y-5">
+                <p className="text-xs text-gray-500">Admin Panel â€º Add Admin</p>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="flex items-start gap-3">
+                        <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)' }}
+                        >
+                            <ShieldCheck className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-bold text-gray-800">Super Admin Access Required</h1>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Only super admins can create admin accounts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (submitted) {
         return (
             <div className="space-y-5">
