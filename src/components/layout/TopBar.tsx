@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useUIStore } from '@/lib/ui-store';
 import { usePathname } from 'next/navigation';
@@ -39,9 +39,11 @@ export default function TopBar() {
   const { toggleSidebar } = useUIStore();
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
+  const displayName = currentUser?.name ?? 'Guest';
+  const departmentName = currentUser?.department?.name ?? 'No department';
 
-  const initials = currentUser?.name
-    ? currentUser.name
+  const initials = displayName !== 'Guest'
+    ? displayName
       .split(' ')
       .map((n) => n[0])
       .join('')
@@ -80,13 +82,16 @@ export default function TopBar() {
           <div className="flex items-center gap-2">
             <div
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs sm:text-sm font-semibold cursor-default select-none transition-transform duration-200 hover:scale-105"
-              title={currentUser?.name ?? 'Guest'}
+              title={`${displayName} - ${departmentName}`}
             >
               {initials}
             </div>
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-gray-800 leading-tight">
-                {currentUser?.name ?? 'Guest'}
+            <div className="block text-right min-w-0 max-w-[120px] sm:max-w-[180px]">
+              <p className="text-sm font-semibold text-gray-800 leading-tight truncate">
+                {displayName}
+              </p>
+              <p className="hidden sm:block text-xs font-medium text-gray-500 leading-tight truncate">
+                {departmentName}
               </p>
             </div>
           </div>

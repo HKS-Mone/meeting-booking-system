@@ -199,7 +199,6 @@ export default function AddBookingPage() {
         return;
       }
       addToast('Booking created successfully.', 'success');
-      router.push('/admin/manage-bookings');
     } catch {
       addToast('An unexpected error occurred. Please try again.', 'error');
     } finally {
