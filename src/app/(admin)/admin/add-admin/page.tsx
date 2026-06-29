@@ -42,6 +42,10 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
     return { level: score as 0 | 1 | 2 | 3, label: labels[score - 1] ?? '' };
 }
 
+function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function AddAdminPage() {
     const [form, setForm] = useState<AdminForm>(EMPTY_FORM);
     const [showPassword, setShowPassword] = useState(false);
@@ -64,10 +68,11 @@ export default function AddAdminPage() {
 
     const validate = () => {
         const e: Partial<Record<keyof AdminForm, string>> = {};
+        const email = form.email.trim();
         if (!form.name.trim()) e.name = 'Full name is required';
         if (!formDepartmentId) e.departmentId = 'Please select a department';
-        if (!form.email.trim()) e.email = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email address';
+        if (!email) e.email = 'Email is required';
+        else if (!isValidEmail(email)) e.email = 'Invalid email address';
         if (!form.password) e.password = 'Password is required';
         else if (form.password.length < 8) e.password = 'Must be at least 8 characters';
         setErrors(e);

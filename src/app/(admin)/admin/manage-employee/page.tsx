@@ -41,6 +41,10 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
 const initials = (name: string) =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || '??';
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 const selectStyle: React.CSSProperties = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat',
@@ -243,14 +247,20 @@ export default function ManageUsersPage() {
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
     const departmentId = form.departmentId || departments[0]?.id || '';
+    const email = form.email.trim();
 
     if (!form.name.trim()) {
       addToast('Full name is required.', 'error');
       return;
     }
 
-    if (!form.email.trim()) {
+    if (!email) {
       addToast('Email address is required.', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      addToast('Enter a valid email address.', 'error');
       return;
     }
 
@@ -267,7 +277,7 @@ export default function ManageUsersPage() {
     try {
       await createUser({
         name: form.name.trim(),
-        email: form.email.trim(),
+        email,
         role: form.role,
         departmentId,
         password: form.password,
@@ -284,10 +294,22 @@ export default function ManageUsersPage() {
 
   const handleEdit = async () => {
     if (!editUser) return;
+    const email = form.email.trim();
+
+    if (!email) {
+      addToast('Email address is required.', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      addToast('Enter a valid email address.', 'error');
+      return;
+    }
+
     try {
       await updateUser(editUser.id, {
         name: form.name.trim() || undefined,
-        email: form.email.trim() || undefined,
+        email,
         role: form.role,
         departmentId: form.departmentId || undefined,
         password: form.password || undefined,
