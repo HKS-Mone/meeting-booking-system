@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../hook/useAuth';
-import { Eye, EyeOff, Mail, Lock, Calendar } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import type { User } from '@/lib/types';
 
 function getPostLoginPath(user?: User) {
@@ -78,13 +79,19 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-6">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
+              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.25)',
             }}
           >
-            <Calendar className="w-5 h-5 text-white" />
+            <Image
+              src="/mone_logo.png"
+              alt="Mone Meeting logo"
+              width={48}
+              height={48}
+              className="h-full w-full object-cover"
+              priority
+            />
           </div>
           <div>
             <span className="text-gray-900 font-bold text-xl leading-none block tracking-tight">
@@ -190,8 +197,14 @@ export default function LoginPage() {
 
       {/* Bottom-left brand watermark */}
       <div className="absolute bottom-4 left-5 z-10 flex items-center gap-1.5 opacity-60">
-        <div className="w-5 h-5 rounded bg-white/20 flex items-center justify-center">
-          <Calendar className="w-3 h-3 text-white" />
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+          <Image
+            src="/mone_logo.png"
+            alt="Mone Meeting logo"
+            width={20}
+            height={20}
+            className="h-full w-full object-cover"
+          />
         </div>
         <span className="text-white text-xs font-medium tracking-wide">Mone Meeting</span>
       </div>

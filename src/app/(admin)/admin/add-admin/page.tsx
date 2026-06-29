@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '../../../../../hook/useUser';
+import { useAuthStore } from '@/lib/auth-store';
 import {
     UserPlus,
     User,
@@ -42,14 +43,20 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
     return { level: score as 0 | 1 | 2 | 3, label: labels[score - 1] ?? '' };
 }
 
+function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function AddAdminPage() {
     const [form, setForm] = useState<AdminForm>(EMPTY_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof AdminForm, string>>>({});
     const addToast = useToastStore((state) => state.addToast);
+    const { currentUser } = useAuthStore();
 
     const { departments, loadDepartments, createUser } = useUser();
+    const canManageAdmins = currentUser?.role === 'SUPER_ADMIN';
 
     useEffect(() => {
         loadDepartments().catch((err: unknown) => {
@@ -64,10 +71,11 @@ export default function AddAdminPage() {
 
     const validate = () => {
         const e: Partial<Record<keyof AdminForm, string>> = {};
+        const email = form.email.trim();
         if (!form.name.trim()) e.name = 'Full name is required';
         if (!formDepartmentId) e.departmentId = 'Please select a department';
-        if (!form.email.trim()) e.email = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email address';
+        if (!email) e.email = 'Email is required';
+        else if (!isValidEmail(email)) e.email = 'Invalid email address';
         if (!form.password) e.password = 'Password is required';
         else if (form.password.length < 8) e.password = 'Must be at least 8 characters';
         setErrors(e);
@@ -78,6 +86,10 @@ export default function AddAdminPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!canManageAdmins) {
+            addToast('Only super admins can create admin accounts.', 'error');
+            return;
+        }
         if (!validate()) return;
         try {
             await createUser({
@@ -120,6 +132,30 @@ export default function AddAdminPage() {
     };
 
     /* ── Success Screen ─────────────────────────────────────────────────────── */
+    if (!canManageAdmins) {
+        return (
+            <div className="space-y-5">
+                <p className="text-xs text-gray-500">Admin Panel â€º Add Admin</p>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="flex items-start gap-3">
+                        <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)' }}
+                        >
+                            <ShieldCheck className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-bold text-gray-800">Super Admin Access Required</h1>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Only super admins can create admin accounts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (submitted) {
         return (
             <div className="space-y-5">
@@ -169,7 +205,7 @@ export default function AddAdminPage() {
                                 Add Another
                             </button>
                             <a
-                                href="/admin/manage-users"
+                                href="/admin/manage-employee"
                                 className="flex-1 py-2.5 rounded-xl text-white text-sm font-medium text-center transition-colors flex items-center justify-center gap-1.5"
                                 style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' }}
                             >
