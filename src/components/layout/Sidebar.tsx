@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -80,14 +81,20 @@ export default function Sidebar() {
             <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'md:justify-center md:w-full lg:justify-start lg:w-auto' : ''}`}>
               {/* Logo icon with glassmorphic glow */}
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden transition-all duration-300 hover:scale-110"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.8) 100%)',
-                  boxShadow: '0 0 18px rgba(96,165,250,0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  boxShadow: '0 0 18px rgba(96,165,250,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
                   transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease',
                 }}
               >
-                <Calendar className="w-5 h-5 text-white drop-shadow" />
+                <Image
+                  src="/mone_logo.png"
+                  alt="Mone Meeting logo"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  priority
+                />
               </div>
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
                 <span className="text-white font-bold text-base leading-none block tracking-tight">
