@@ -22,6 +22,8 @@ interface UserForm {
   password: string;
 }
 
+type UserFormErrors = Partial<Record<keyof UserForm, string>>;
+
 const EMPTY_FORM: UserForm = {
   name: '',
   email: '',
@@ -67,19 +69,24 @@ interface FormFieldsProps {
   isEdit: boolean;
   departments: Department[];
   canManageAdminRoles: boolean;
+  errors: UserFormErrors;
 }
 
-function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, canManageAdminRoles }: Readonly<FormFieldsProps>) {
+function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, canManageAdminRoles, errors }: Readonly<FormFieldsProps>) {
   const pwStrength = getPasswordStrength(form.password);
+  const fieldClass = (field: keyof UserForm, extra = '') =>
+    `${inputCls} ${extra} relative z-20 ${errors[field] ? 'border-red-300 bg-red-50 hover:border-red-300 focus:ring-red-500' : ''}`;
+  const errorText = (field: keyof UserForm) =>
+    errors[field] ? <p className="relative z-30 text-xs text-red-500">{errors[field]}</p> : null;
 
   return (
-    <div className="space-y-5">
+    <div className="relative z-20 space-y-5">
 
       {/* ── Identity ───── */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Identity</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-name" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <UserIcon className="w-3.5 h-3.5 text-gray-400" />
               Full Name <span className="text-red-400">*</span>
@@ -90,10 +97,11 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               value={form.name}
               onChange={(e) => onChange({ name: e.target.value })}
               placeholder="e.g. Jane Smith"
-              className={inputCls}
+              className={fieldClass('name')}
             />
+            {errorText('name')}
           </div>
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-email" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <Mail className="w-3.5 h-3.5 text-gray-400" />
               Email Address <span className="text-red-400">*</span>
@@ -105,8 +113,9 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               onChange={(e) => onChange({ email: e.target.value })}
               placeholder="email@company.com"
               autoComplete="off"
-              className={inputCls}
+              className={fieldClass('email')}
             />
+            {errorText('email')}
           </div>
         </div>
       </div>
@@ -117,7 +126,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Role selector */}
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-role" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
               Role <span className="text-red-400">*</span>
@@ -127,7 +136,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               value={form.role}
               onChange={(e) => onChange({ role: e.target.value as UserForm['role'] })}
               disabled={!canManageAdminRoles}
-              className={`${inputCls} appearance-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+              className={fieldClass('role', 'appearance-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed')}
               style={selectStyle}
             >
               <option value="EMPLOYEE">Employee</option>
@@ -143,10 +152,11 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
                 </option>
               )}
             </select>
+            {errorText('role')}
           </div>
 
           {/* Department */}
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-department" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <Building2 className="w-3.5 h-3.5 text-gray-400" />
               Department <span className="text-red-400">*</span>
@@ -155,7 +165,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               id="form-user-department"
               value={form.departmentId}
               onChange={(e) => onChange({ departmentId: e.target.value })}
-              className={`${inputCls} appearance-none`}
+              className={fieldClass('departmentId', 'appearance-none')}
               style={selectStyle}
             >
               {departments.length === 0 ? (
@@ -166,6 +176,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
                 ))
               )}
             </select>
+            {errorText('departmentId')}
           </div>
         </div>
       </div>
@@ -175,7 +186,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Security{isEdit && <span className="normal-case font-normal text-gray-400 ml-1">— leave blank to keep current</span>}
         </p>
-        <div className="space-y-1.5">
+        <div className="relative z-20 space-y-1.5">
           <label htmlFor="form-user-password" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
             <Lock className="w-3.5 h-3.5 text-gray-400" />
             Password {!isEdit && <span className="text-red-400">*</span>}
@@ -188,7 +199,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               onChange={(e) => onChange({ password: e.target.value })}
               placeholder={isEdit ? 'Leave blank to keep unchanged' : 'Min. 8 characters'}
               autoComplete="new-password"
-              className={`${inputCls} pr-11`}
+              className={fieldClass('password', 'pr-11')}
             />
             <button
               type="button"
@@ -220,6 +231,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               )}
             </div>
           )}
+          {errorText('password')}
         </div>
       </div>
     </div>
@@ -246,6 +258,7 @@ export default function ManageUsersPage() {
   const [editUser, setEditUser]   = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [form, setForm]           = useState<UserForm>(EMPTY_FORM);
+  const [formErrors, setFormErrors] = useState<UserFormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -253,12 +266,39 @@ export default function ManageUsersPage() {
     loadDepartments();
   }, [loadUsers, loadDepartments]);
 
-  const onChange = (f: Partial<UserForm>) => setForm((prev) => ({ ...prev, ...f }));
+  const onChange = (f: Partial<UserForm>) => {
+    setForm((prev) => ({ ...prev, ...f }));
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      (Object.keys(f) as Array<keyof UserForm>).forEach((field) => {
+        delete next[field];
+      });
+      return next;
+    });
+  };
   const togglePw = () => setShowPassword((v) => !v);
   const canDeleteUser = (user: User) => canManageEmployees && (canManageAdminRoles || user.role === 'EMPLOYEE');
   const addForm = addOpen
     ? { ...form, departmentId: form.departmentId || departments[0]?.id || '' }
     : form;
+
+  const validateForm = (options: { isEdit: boolean; departmentId: string }) => {
+    const errors: UserFormErrors = {};
+    const email = form.email.trim();
+
+    if (!form.name.trim()) errors.name = 'Full name is required.';
+    if (!email) errors.email = 'Email address is required.';
+    else if (!isValidEmail(email)) errors.email = 'Enter a valid email address.';
+    if (!options.departmentId) errors.departmentId = 'Please select a department.';
+    if (!canManageAdminRoles && form.role !== 'EMPLOYEE') errors.role = 'Only super admins can choose admin roles.';
+    if (!options.isEdit && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
+    if (options.isEdit && form.password && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
+
+    setFormErrors(errors);
+    const firstError = Object.values(errors)[0];
+    if (firstError) addToast(firstError, 'error');
+    return !firstError;
+  };
 
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
@@ -268,42 +308,19 @@ export default function ManageUsersPage() {
     }
 
     if (form.role !== 'EMPLOYEE' && !canManageAdminRoles) {
-      addToast('Only super admins can create admin accounts.', 'error');
+      const message = 'Only super admins can create admin accounts.';
+      setFormErrors({ role: message });
+      addToast(message, 'error');
       return;
     }
 
     const departmentId = form.departmentId || departments[0]?.id || '';
-    const email = form.email.trim();
-
-    if (!form.name.trim()) {
-      addToast('Full name is required.', 'error');
-      return;
-    }
-
-    if (!email) {
-      addToast('Email address is required.', 'error');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      addToast('Enter a valid email address.', 'error');
-      return;
-    }
-
-    if (!departmentId) {
-      addToast('Please select a department.', 'error');
-      return;
-    }
-
-    if (form.password.length < 8) {
-      addToast('Password must be at least 8 characters.', 'error');
-      return;
-    }
+    if (!validateForm({ isEdit: false, departmentId })) return;
 
     try {
       await createUser({
         name: form.name.trim(),
-        email,
+        email: form.email.trim(),
         role: form.role,
         departmentId,
         password: form.password,
@@ -311,45 +328,42 @@ export default function ManageUsersPage() {
       setForm(EMPTY_FORM);
       setShowPassword(false);
       setAddOpen(false);
+      setFormErrors({});
       addToast('Employee created successfully.', 'success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create employee.';
+      setFormErrors({ email: message });
       addToast(message, 'error');
     }
   };
 
   const handleEdit = async () => {
     if (!editUser) return;
-    const email = form.email.trim();
 
     if (form.role !== editUser.role && !canManageAdminRoles) {
-      addToast('Only super admins can change user roles.', 'error');
+      const message = 'Only super admins can change user roles.';
+      setFormErrors({ role: message });
+      addToast(message, 'error');
       return;
     }
 
-    if (!email) {
-      addToast('Email address is required.', 'error');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      addToast('Enter a valid email address.', 'error');
-      return;
-    }
+    if (!validateForm({ isEdit: true, departmentId: form.departmentId })) return;
 
     try {
       await updateUser(editUser.id, {
         name: form.name.trim() || undefined,
-        email,
+        email: form.email.trim(),
         role: form.role,
         departmentId: form.departmentId || undefined,
         password: form.password || undefined,
       });
       setShowPassword(false);
       setEditUser(null);
+      setFormErrors({});
       addToast('Employee updated successfully.', 'success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update employee.';
+      setFormErrors({ email: message });
       addToast(message, 'error');
     }
   };
@@ -387,6 +401,7 @@ export default function ManageUsersPage() {
       ...EMPTY_FORM,
       departmentId: departments[0]?.id ?? '',
     });
+    setFormErrors({});
     setShowPassword(false);
     setAddOpen(true);
   };
@@ -399,12 +414,13 @@ export default function ManageUsersPage() {
       departmentId: u.departmentId ?? departments[0]?.id ?? '',
       password: '',
     });
+    setFormErrors({});
     setShowPassword(false);
     setEditUser(u);
   };
 
-  const closeAdd  = () => { setForm(EMPTY_FORM); setShowPassword(false); setAddOpen(false); };
-  const closeEdit = () => { setForm(EMPTY_FORM); setShowPassword(false); setEditUser(null); };
+  const closeAdd  = () => { setForm(EMPTY_FORM); setFormErrors({}); setShowPassword(false); setAddOpen(false); };
+  const closeEdit = () => { setForm(EMPTY_FORM); setFormErrors({}); setShowPassword(false); setEditUser(null); };
 
   /* ── Render ─────────────────────── */
   return (
@@ -545,6 +561,7 @@ export default function ManageUsersPage() {
             isEdit={false}
             departments={departments}
             canManageAdminRoles={canManageAdminRoles}
+            errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeAdd} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -574,6 +591,7 @@ export default function ManageUsersPage() {
             isEdit={true}
             departments={departments}
             canManageAdminRoles={canManageAdminRoles}
+            errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeEdit} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
