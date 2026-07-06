@@ -251,7 +251,7 @@ export default function ManageUsersPage() {
   } = useUser();
   const addToast = useToastStore((state) => state.addToast);
   const { currentUser } = useAuthStore();
-  const canManageEmployees = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+  const canManageEmployees = currentUser?.role === 'SUPER_ADMIN';
   const canManageAdminRoles = currentUser?.role === 'SUPER_ADMIN';
 
   const [addOpen, setAddOpen]     = useState(false);
@@ -303,7 +303,7 @@ export default function ManageUsersPage() {
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
     if (!canManageEmployees) {
-      addToast('Only admins can add users.', 'error');
+      addToast('Only super admins can add users.', 'error');
       return;
     }
 
@@ -370,7 +370,7 @@ export default function ManageUsersPage() {
 
   const handleDelete = async (u: User) => {
     if (!canManageEmployees) {
-      addToast('Only admins can delete users.', 'error');
+      addToast('Only super admins can delete users.', 'error');
       setDeleteUser(null);
       return;
     }
@@ -393,7 +393,7 @@ export default function ManageUsersPage() {
 
   const openAdd = () => {
     if (!canManageEmployees) {
-      addToast('Only admins can add users.', 'error');
+      addToast('Only super admins can add users.', 'error');
       return;
     }
 
@@ -435,7 +435,7 @@ export default function ManageUsersPage() {
           disabled={!canManageEmployees}
           className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
           style={{ background: canManageEmployees ? 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' : '#94a3b8', boxShadow: canManageEmployees ? '0 4px 12px rgba(37,99,235,0.3)' : 'none' }}
-          title={canManageEmployees ? 'Add employee' : 'Only admins can add users'}
+          title={canManageEmployees ? 'Add employee' : 'Only super admins can add users'}
         >
           <Plus className="w-4.5 h-4.5" />
           Add Employee
@@ -470,10 +470,10 @@ export default function ManageUsersPage() {
                 className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
                 Edit
               </button>
-              <button id={`delete-user-${u.id}`} onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast(u.role === 'EMPLOYEE' ? 'Only admins can delete users.' : 'Only super admins can delete admin accounts.', 'error')}
+              <button id={`delete-user-${u.id}`} onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast('Only super admins can delete users.', 'error')}
                 disabled={!canDeleteUser(u)}
                 className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title={canDeleteUser(u) ? 'Delete user' : u.role === 'EMPLOYEE' ? 'Only admins can delete users' : 'Only super admins can delete admin accounts'}>
+                title={canDeleteUser(u) ? 'Delete user' : 'Only super admins can delete users'}>
                 Delete
               </button>
             </div>
@@ -534,10 +534,10 @@ export default function ManageUsersPage() {
                       </button>
                       <button
                         id={`delete-user-${u.id}`}
-                        onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast(u.role === 'EMPLOYEE' ? 'Only admins can delete users.' : 'Only super admins can delete admin accounts.', 'error')}
+                        onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast('Only super admins can delete users.', 'error')}
                         disabled={!canDeleteUser(u)}
                         className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        title={canDeleteUser(u) ? 'Delete user' : u.role === 'EMPLOYEE' ? 'Only admins can delete users' : 'Only super admins can delete admin accounts'}
+                        title={canDeleteUser(u) ? 'Delete user' : 'Only super admins can delete users'}
                       >
                         <Trash2 className="w-4.5 h-4.5" />
                       </button>

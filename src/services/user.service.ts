@@ -66,12 +66,6 @@ async function getAuthenticatedRole(): Promise<Role> {
   return authResult.user.role;
 }
 
-function ensureAdminOrSuperAdmin(role: Role): void {
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-    throw new Error('Only admins can perform this action.');
-  }
-}
-
 function ensureSuperAdmin(role: Role, message = 'Only super admins can perform this action.'): void {
   if (role !== 'SUPER_ADMIN') {
     throw new Error(message);
@@ -113,11 +107,7 @@ export async function getUserById(id: string): Promise<User | null> {
 
 export async function createUser(input: CreateUserInput): Promise<User> {
   const actorRole = await getAuthenticatedRole();
-  ensureAdminOrSuperAdmin(actorRole);
-
-  if (input.role !== 'EMPLOYEE') {
-    ensureSuperAdmin(actorRole, 'Only super admins can create admin accounts.');
-  }
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
 
   const passwordHash = input.password ? hashPassword(input.password) : undefined;
   const dbUser = await UserRepository.create({
@@ -132,15 +122,11 @@ export async function createUser(input: CreateUserInput): Promise<User> {
 
 export async function updateUser(id: string, input: UpdateUserInput): Promise<User | null> {
   const actorRole = await getAuthenticatedRole();
-  ensureAdminOrSuperAdmin(actorRole);
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
 
   if (input.role !== undefined) {
     const currentUser = await UserRepository.findById(Number(id));
     if (!currentUser) return null;
-
-    if (currentUser.role !== input.role) {
-      ensureSuperAdmin(actorRole, 'Only super admins can change user roles.');
-    }
   }
 
   const updateData: Prisma.UserUncheckedUpdateInput = {};
@@ -159,14 +145,10 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Us
 
 export async function deleteUser(id: string): Promise<boolean> {
   const actorRole = await getAuthenticatedRole();
-  ensureAdminOrSuperAdmin(actorRole);
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
 
   const targetUser = await UserRepository.findById(Number(id));
   if (!targetUser) return false;
-
-  if (targetUser.role !== 'EMPLOYEE') {
-    ensureSuperAdmin(actorRole, 'Only super admins can delete admin accounts.');
-  }
 
   await UserRepository.delete(Number(id));
   return true;
