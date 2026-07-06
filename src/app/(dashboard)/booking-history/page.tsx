@@ -7,9 +7,8 @@ import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
 import { Eye } from 'lucide-react';
 import { useBooking } from '../../../../hook/useBooking';
+import { useInfiniteScroll } from '../../../../hook/useInfiniteScroll';
 import { useToastStore } from '@/components/ui/Toast';
-
-const LATEST_BOOKINGS_LIMIT = 20;
 
 type StatusFilter = '' | MeetingStatus;
 
@@ -20,9 +19,8 @@ const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
   { label: 'Complete', value: 'COMPLETE' },
 ];
 
-const ITEMS_PER_PAGE = 10;
+const PAGE_SIZE = 20;
 
-// Display order for meeting statuses: Ongoing first, then Upcoming, then Complete.
 const STATUS_ORDER: Record<MeetingStatus, number> = { ONGOING: 0, UPCOMING: 1, COMPLETE: 2 };
 
 export default function BookingHistoryPage() {
@@ -30,7 +28,6 @@ export default function BookingHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Booking | null>(null);
   const addToast = useToastStore((state) => state.addToast);
 
@@ -41,24 +38,13 @@ export default function BookingHistoryPage() {
     });
   }, [loadBookings, addToast]);
 
-  const latestBookings = useMemo(
-    () =>
-      [...bookings]
-        .sort((a, b) => b.startTime.localeCompare(a.startTime))
-        .slice(0, LATEST_BOOKINGS_LIMIT),
+
+  const withStatus = useMemo(
+    () => bookings.map((booking) => ({ booking, status: getMeetingStatus(booking.startTime, booking.endTime) })),
     [bookings],
   );
 
-  // Compute each booking's status once so it stays consistent across the whole
-  // filter/sort pass (getMeetingStatus reads `now`, which could otherwise shift
-  // mid-sort and break the comparator). Time complexity: O(n).
-  const withStatus = useMemo(
-    () => latestBookings.map((booking) => ({ booking, status: getMeetingStatus(booking.startTime, booking.endTime) })),
-    [latestBookings],
-  );
 
-  // Filter, then order by status (Ongoing → Upcoming → Complete) using the
-  // cached status. Time complexity: O(n log n).
   const filtered = useMemo(() => {
     return withStatus
       .filter(({ booking, status }) => {
@@ -71,7 +57,6 @@ export default function BookingHistoryPage() {
         if (STATUS_ORDER[a.status] !== STATUS_ORDER[b.status]) {
           return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
         }
-        // Within COMPLETE, most recent first; within ONGOING/UPCOMING, soonest first
         return a.status === 'COMPLETE'
           ? b.booking.startTime.localeCompare(a.booking.startTime)
           : a.booking.startTime.localeCompare(b.booking.startTime);
@@ -79,12 +64,16 @@ export default function BookingHistoryPage() {
       .map(({ booking }) => booking);
   }, [withStatus, statusFilter, fromDate, toDate]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const { visibleCount, hasMore, sentinelRef } = useInfiniteScroll(
+    filtered.length,
+    PAGE_SIZE,
+    `${statusFilter}|${fromDate}|${toDate}`,
+  );
+  const visibleBookings = filtered.slice(0, visibleCount);
 
   const handleFilterChange = (newStatus: StatusFilter) => {
     setStatusFilter(newStatus);
-    setPage(1);
   };
 
   return (
@@ -105,14 +94,14 @@ export default function BookingHistoryPage() {
           type="date"
           id="booking-from-date"
           value={fromDate}
-          onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
+          onChange={(e) => setFromDate(e.target.value)}
           className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <input
           type="date"
           id="booking-to-date"
           value={toDate}
-          onChange={(e) => { setToDate(e.target.value); setPage(1); }}
+          onChange={(e) => setToDate(e.target.value)}
           className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -130,11 +119,11 @@ export default function BookingHistoryPage() {
 
       {/* ── MOBILE: Card List ─────────────────────────────────────────────── */}
       <div className="sm:hidden space-y-3">
-        {paginated.length === 0 ? (
+        {visibleBookings.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center text-gray-400 text-sm">
             No bookings found.
           </div>
-        ) : paginated.map((b) => {
+        ) : visibleBookings.map((b) => {
           const status = getMeetingStatus(b.startTime, b.endTime);
           return (
             <div
@@ -203,13 +192,13 @@ export default function BookingHistoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {paginated.length === 0 ? (
+              {visibleBookings.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-gray-400 text-sm">
                     No bookings found.
                   </td>
                 </tr>
-              ) : paginated.map((b) => {
+              ) : visibleBookings.map((b) => {
                 const status = getMeetingStatus(b.startTime, b.endTime);
                 return (
                   <tr key={b.id} className="hover:bg-gray-50 transition-colors">
@@ -233,34 +222,12 @@ export default function BookingHistoryPage() {
             </tbody>
           </table>
         </div>
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
-              Showing {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-            </p>
-            <div className="flex gap-2">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Previous</button>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Mobile pagination */}
-      {totalPages > 1 && (
-        <div className="sm:hidden flex items-center justify-between">
-          <p className="text-xs text-gray-500">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-              className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white disabled:opacity-40">Previous</button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white disabled:opacity-40">Next</button>
-          </div>
+      {/* Infinite-scroll sentinel — loads the next 20 rows when it enters view */}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex items-center justify-center py-4 text-xs text-gray-400">
+          Loading more…
         </div>
       )}
 

@@ -15,6 +15,9 @@ import {
 } from '@/services/booking.service';
 import { useToastStore } from '@/components/ui/Toast';
 import { staggerStyle, staggerClass } from '@/lib/animations';
+import { useInfiniteScroll } from '../../../../../hook/useInfiniteScroll';
+
+const PAGE_SIZE = 20;
 
 // ─── Form state shape ─────────────────
 interface BookingForm {
@@ -90,6 +93,10 @@ export default function ManageBookingsPage() {
         b.department?.name.toLowerCase().includes(q)
     );
   }, [bookingList, search]);
+
+
+  const { visibleCount, hasMore, sentinelRef } = useInfiniteScroll(filtered.length, PAGE_SIZE, search);
+  const visibleBookings = filtered.slice(0, visibleCount);
 
   // ─── Helpers ────────────────────────
   const fieldVal = (f: Partial<BookingForm>) =>
@@ -342,7 +349,7 @@ export default function ManageBookingsPage() {
           <div className="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center text-gray-400 text-sm">
             No bookings found.
           </div>
-        ) : filtered.map((b, idx) => {
+        ) : visibleBookings.map((b, idx) => {
           const status = getMeetingStatus(b.startTime, b.endTime);
           return (
             <div
@@ -417,7 +424,7 @@ export default function ManageBookingsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((b, idx) => {
+                visibleBookings.map((b, idx) => {
                   const status = getMeetingStatus(b.startTime, b.endTime);
                   return (
                     <tr
@@ -461,6 +468,13 @@ export default function ManageBookingsPage() {
           </table>
         </div>
       </div>
+
+      {/* Infinite-scroll sentinel — loads the next 20 rows when it enters view */}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex items-center justify-center py-4 text-xs text-gray-400">
+          Loading more…
+        </div>
+      )}
 
       {/* Edit Modal */}
       <Modal open={!!editBooking} onClose={() => setEditBooking(null)} title="Edit Booking" size="md">
