@@ -22,10 +22,8 @@ export default async function AdminDashboardPage() {
   const allBookings = bookingsResult.bookings ?? [];
   const now = new Date();
   const today = format(now, 'yyyy-MM-dd');
-  const thisMonth = format(now, 'yyyy-MM');
 
   const todayBookings = allBookings.filter((b) => b.date === today);
-  const thisMonthCount = allBookings.filter((b) => b.date.startsWith(thisMonth)).length;
   const activeNow = allBookings.filter((b) => {
     const start = new Date(b.startTime);
     const end = new Date(b.endTime);
@@ -68,31 +66,7 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatsCard
-          title="Meetings Today"
-          value={stats.todaysBookings}
-          iconName="Calendar"
-          iconColor="text-sky-600"
-          iconBg="bg-sky-50"
-          linkHref="/admin/calendar"
-        />
-        <StatsCard
-          title="This Month"
-          value={thisMonthCount}
-          iconName="BarChart2"
-          iconColor="text-indigo-600"
-          iconBg="bg-indigo-50"
-          linkHref="/admin/calendar"
-        />
-        <StatsCard
-          title="Active Bookings"
-          value={upcoming.length + activeNow.length}
-          iconName="CheckCircle"
-          iconColor="text-emerald-600"
-          iconBg="bg-emerald-50"
-          linkHref=""
-        />
+      <div className="grid gap-3 sm:gap-4">
         <StatsCard
           title="Ongoing Now"
           value={activeNow.length}
@@ -101,20 +75,36 @@ export default async function AdminDashboardPage() {
           iconBg="bg-orange-50"
           linkHref=""
         />
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <StatsCard
+            title="Meetings Today"
+            value={stats.todaysBookings}
+            iconName="Calendar"
+            iconColor="text-sky-600"
+            iconBg="bg-sky-50"
+            linkHref="/admin/calendar"
+          />
+          <StatsCard
+            title="Active Bookings"
+            value={upcoming.length + activeNow.length}
+            iconName="CheckCircle"
+            iconColor="text-emerald-600"
+            iconBg="bg-emerald-50"
+            linkHref=""
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-[1.4fr_0.9fr]">
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">Today&apos;s meetings</h2>
-                <p className="text-sm text-slate-500">What is happening right now across all rooms.</p>
-              </div>
+      <div className="space-y-6">
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Today&apos;s meetings</h2>
+              <p className="text-sm text-slate-500">What is happening right now across all rooms.</p>
             </div>
-            <TodaysMeetingsTable bookings={todayBookings} />
-          </section>
-        </div>
+          </div>
+          <TodaysMeetingsTable bookings={todayBookings} />
+        </section>
       </div>
     </div>
   );
