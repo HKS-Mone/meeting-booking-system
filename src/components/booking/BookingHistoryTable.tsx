@@ -4,9 +4,6 @@ import { useState } from 'react';
 import { Booking } from '@/lib/types';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import { formatDate, formatTime, getMeetingStatus } from '@/lib/utils';
-import { Eye } from 'lucide-react';
-import Modal from '@/components/ui/Modal';
-import { format } from 'date-fns';
 
 interface BookingHistoryTableProps {
   bookings: Booking[];
@@ -16,7 +13,6 @@ const ITEMS_PER_PAGE = 10;
 
 export default function BookingHistoryTable({ bookings }: BookingHistoryTableProps) {
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Booking | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(bookings.length / ITEMS_PER_PAGE));
   const paginated = bookings.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -27,7 +23,7 @@ export default function BookingHistoryTable({ bookings }: BookingHistoryTablePro
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              {['Booking ID', 'Room', 'Department', 'Date', 'Time', 'Status', 'Action'].map(
+              {['Booking ID', 'Room', 'Department', 'Date', 'Time', 'Status'].map(
                 (h) => (
                   <th
                     key={h}
@@ -42,7 +38,7 @@ export default function BookingHistoryTable({ bookings }: BookingHistoryTablePro
           <tbody className="divide-y divide-gray-50">
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-gray-400 text-sm">
+                <td colSpan={6} className="px-4 py-10 text-center text-gray-400 text-sm">
                   No bookings found.
                 </td>
               </tr>
@@ -64,15 +60,6 @@ export default function BookingHistoryTable({ bookings }: BookingHistoryTablePro
                     </td>
                     <td className="px-4 py-3">
                       <MeetingStatusBadge status={status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        id={`view-booking-${b.id}`}
-                        onClick={() => setSelected(b)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                     </td>
                   </tr>
                 );
@@ -107,35 +94,6 @@ export default function BookingHistoryTable({ bookings }: BookingHistoryTablePro
           </div>
         </div>
       )}
-
-      {/* Detail Modal */}
-      <Modal open={!!selected} onClose={() => setSelected(null)} title="Booking Details" size="md">
-        {selected && (() => {
-          const status = getMeetingStatus(selected.startTime, selected.endTime);
-          return (
-            <div className="space-y-3 text-sm">
-              <div className="flex gap-3 items-center">
-                <span className="w-28 shrink-0 text-gray-500">Status</span>
-                <MeetingStatusBadge status={status} />
-              </div>
-              {[
-                ['Booking ID', selected.bookingCode],
-                ['Room', selected.room?.name ?? '-'],
-                ['Department', selected.department?.name ?? '-'],
-                ['Purpose', selected.purpose],
-                ['Date', formatDate(selected.date)],
-                ['Time', `${formatTime(selected.startTime)} – ${formatTime(selected.endTime)}`],
-                ['Participants', String(selected.participants)],
-              ].map(([label, value]) => (
-                <div key={label} className="flex gap-3">
-                  <span className="w-28 shrink-0 text-gray-500">{label}</span>
-                  <span className="font-medium text-gray-800">{value}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-      </Modal>
     </>
   );
 }
