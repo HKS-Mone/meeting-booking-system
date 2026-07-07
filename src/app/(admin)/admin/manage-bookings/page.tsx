@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking } from '@/lib/types';
+import { Booking, MeetingStatus } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import { formatDate, formatTime, getMeetingStatus } from '@/lib/utils';
@@ -47,6 +47,9 @@ function bookingTimeToMinutes(iso: string): number {
   return date.getHours() * 60 + date.getMinutes();
 }
 
+// ─── Table ordering: ongoing → upcoming (earliest first) → complete (most recent first) ───
+const STATUS_ORDER: Record<MeetingStatus, number> = { ONGOING: 0, UPCOMING: 1, COMPLETE: 2 };
+
 export default function ManageBookingsPage() {
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
@@ -82,16 +85,28 @@ export default function ManageBookingsPage() {
     };
   }, [addToast]);
 
-  // ─── Filtered list ────────────────────
+  // ─── Filtered + ordered list: ongoing → upcoming (earliest first) → complete (most recent first) ────
   const filtered = useMemo(() => {
-    if (!search) return bookingList;
     const q = search.toLowerCase();
-    return bookingList.filter(
-      (b) =>
-        b.bookingCode.toLowerCase().includes(q) ||
-        b.purpose.toLowerCase().includes(q) ||
-        b.department?.name.toLowerCase().includes(q)
-    );
+    const matches = search
+      ? bookingList.filter(
+          (b) =>
+            b.bookingCode.toLowerCase().includes(q) ||
+            b.purpose.toLowerCase().includes(q) ||
+            b.department?.name.toLowerCase().includes(q)
+        )
+      : bookingList;
+
+    return [...matches].sort((a, b) => {
+      const statusA = getMeetingStatus(a.startTime, a.endTime);
+      const statusB = getMeetingStatus(b.startTime, b.endTime);
+      if (STATUS_ORDER[statusA] !== STATUS_ORDER[statusB]) {
+        return STATUS_ORDER[statusA] - STATUS_ORDER[statusB];
+      }
+      return statusA === 'COMPLETE'
+        ? b.startTime.localeCompare(a.startTime)
+        : a.startTime.localeCompare(b.startTime);
+    });
   }, [bookingList, search]);
 
 
