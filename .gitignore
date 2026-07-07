@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript2
 *.tsbuildinfo
 next-env.d.ts
+
+*.iml
+*.ipr
+*.md

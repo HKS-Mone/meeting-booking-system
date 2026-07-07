@@ -25,7 +25,7 @@ const adminLinks = [
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/manage-bookings', label: 'Manage Bookings', icon: ClipboardList },
   { href: '/admin/manage-employee', label: 'Manage Employee', icon: Users },
-  { href: '/admin/add-admin', label: 'Add Admin', icon: Building2 },
+  // { href: '/admin/add-admin', label: 'Add Admin', icon: Building2 },
   // { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
@@ -105,9 +105,6 @@ export default function AdminSidebar() {
               </div>
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
                 <span className="text-white font-bold text-base leading-none block tracking-tight">
-                  Admin Panel
-                </span>
-                <span className="text-white/70 text-[10px] font-medium tracking-wide">
                   Mone Meeting
                 </span>
               </div>

@@ -68,11 +68,10 @@ interface FormFieldsProps {
   onTogglePassword: () => void;
   isEdit: boolean;
   departments: Department[];
-  canManageAdminRoles: boolean;
   errors: UserFormErrors;
 }
 
-function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, canManageAdminRoles, errors }: Readonly<FormFieldsProps>) {
+function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, errors }: Readonly<FormFieldsProps>) {
   const pwStrength = getPasswordStrength(form.password);
   const fieldClass = (field: keyof UserForm, extra = '') =>
     `${inputCls} ${extra} relative z-20 ${errors[field] ? 'border-red-300 bg-red-50 hover:border-red-300 focus:ring-red-500' : ''}`;
@@ -125,7 +124,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Access</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-          {/* Role selector */}
+          {/* Role selector — this form only manages employees; admin accounts are created via Add Admin */}
           <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-role" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
@@ -135,18 +134,12 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               id="form-user-role"
               value={form.role}
               onChange={(e) => onChange({ role: e.target.value as UserForm['role'] })}
-              disabled={!canManageAdminRoles}
+              disabled
               className={fieldClass('role', 'appearance-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed')}
               style={selectStyle}
             >
               <option value="EMPLOYEE">Employee</option>
-              {canManageAdminRoles && (
-                <>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                </>
-              )}
-              {!canManageAdminRoles && form.role !== 'EMPLOYEE' && (
+              {form.role !== 'EMPLOYEE' && (
                 <option value={form.role}>
                   {form.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
                 </option>
@@ -290,7 +283,6 @@ export default function ManageUsersPage() {
     if (!email) errors.email = 'Email address is required.';
     else if (!isValidEmail(email)) errors.email = 'Enter a valid email address.';
     if (!options.departmentId) errors.departmentId = 'Please select a department.';
-    if (!canManageAdminRoles && form.role !== 'EMPLOYEE') errors.role = 'Only super admins can choose admin roles.';
     if (!options.isEdit && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
     if (options.isEdit && form.password && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
 
@@ -304,13 +296,6 @@ export default function ManageUsersPage() {
   const handleAdd = async () => {
     if (!canManageEmployees) {
       addToast('Only super admins can add users.', 'error');
-      return;
-    }
-
-    if (form.role !== 'EMPLOYEE' && !canManageAdminRoles) {
-      const message = 'Only super admins can create admin accounts.';
-      setFormErrors({ role: message });
-      addToast(message, 'error');
       return;
     }
 
@@ -339,13 +324,6 @@ export default function ManageUsersPage() {
 
   const handleEdit = async () => {
     if (!editUser) return;
-
-    if (form.role !== editUser.role && !canManageAdminRoles) {
-      const message = 'Only super admins can change user roles.';
-      setFormErrors({ role: message });
-      addToast(message, 'error');
-      return;
-    }
 
     if (!validateForm({ isEdit: true, departmentId: form.departmentId })) return;
 
@@ -560,7 +538,6 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={false}
             departments={departments}
-            canManageAdminRoles={canManageAdminRoles}
             errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
@@ -590,7 +567,6 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={true}
             departments={departments}
-            canManageAdminRoles={canManageAdminRoles}
             errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">

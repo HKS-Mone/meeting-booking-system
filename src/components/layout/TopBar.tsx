@@ -74,23 +74,23 @@ export default function TopBar() {
         </div>
 
         {/* Right: user avatar */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Divider — hidden on very small screens */}
           <div className="hidden xs:block h-8 w-px bg-gray-200" />
 
           {/* User */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <div
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs sm:text-sm font-semibold cursor-default select-none transition-transform duration-200 hover:scale-105"
               title={`${displayName} - ${departmentName}`}
             >
               {initials}
             </div>
-            <div className="block text-right min-w-0 max-w-[120px] sm:max-w-[180px]">
-              <p className="text-sm font-semibold text-gray-800 leading-tight truncate">
+            <div className="block text-right min-w-0 max-w-[92px] sm:max-w-[180px]">
+              <p className="text-xs sm:text-sm font-semibold text-gray-800 leading-tight truncate">
                 {displayName}
               </p>
-              <p className="hidden sm:block text-xs font-medium text-gray-500 leading-tight truncate">
+              <p className="block text-[11px] sm:text-xs font-medium text-gray-500 leading-tight truncate">
                 {departmentName}
               </p>
             </div>
