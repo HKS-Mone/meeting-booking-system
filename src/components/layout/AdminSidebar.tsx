@@ -105,9 +105,6 @@ export default function AdminSidebar() {
               </div>
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
                 <span className="text-white font-bold text-base leading-none block tracking-tight">
-                  Admin Panel
-                </span>
-                <span className="text-white/70 text-[10px] font-medium tracking-wide">
                   Mone Meeting
                 </span>
               </div>

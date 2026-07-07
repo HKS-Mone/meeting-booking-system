@@ -99,10 +99,7 @@ export default function Sidebar() {
               <div className={sidebarCollapsed ? "block md:hidden lg:block" : "block"}>
                 <span className="text-white font-bold text-base leading-none block tracking-tight">
                   Mone Meeting
-                </span>
-                <span className="text-white/70 text-[10px] font-medium tracking-wide">
-                  Meeting Booking System
-                </span>
+                </span>  
               </div>
             </div>
             {!sidebarCollapsed && (
