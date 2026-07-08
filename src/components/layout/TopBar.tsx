@@ -8,13 +8,13 @@ import { usePathname } from 'next/navigation';
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/meeting-rooms': 'Meeting Rooms',
-  '/book-room': 'Book Meeting Room',
-  '/calendar': 'Calendar',
+  '/book-room': 'M ONE INTEGRATION PVT LTD',
+  '/calendar': 'M ONE INTEGRATION PVT LTD',
   '/booking-history': 'Meeting Bookings',
   '/departments': 'Departments',
   '/reports': 'Reports',
   '/settings': 'Settings',
-  '/admin/dashboard': 'Admin Dashboard',
+  '/admin/dashboard': 'M ONE INTEGRATION PVT LTD',
   '/admin/manage-bookings': 'Manage Bookings',
   '/admin/manage-rooms': 'Manage Rooms',
   '/admin/manage-departments': 'Manage Departments',
@@ -31,7 +31,7 @@ function getPageTitle(pathname: string): string {
   for (const [key, value] of Object.entries(PAGE_TITLES)) {
     if (pathname.startsWith(key + '/')) return value;
   }
-  return 'Mone Meeting';
+  return 'M ONE INTEGRATION PVT LTD';
 }
 
 export default function TopBar() {

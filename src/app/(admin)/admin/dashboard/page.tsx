@@ -45,7 +45,7 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-                Mone Meeting Control Center
+                M ONE MEETING ROOM
               </h1>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
