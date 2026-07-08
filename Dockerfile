@@ -42,6 +42,15 @@ RUN node_modules/.bin/tsc prisma/seed.ts \
     --moduleResolution node \
     --skipLibCheck
 
+# Compile reset-admin-password.ts
+RUN node_modules/.bin/tsc scripts/reset-admin-password.ts \
+    --outDir scripts \
+    --esModuleInterop \
+    --module commonjs \
+    --target es2017 \
+    --moduleResolution node \
+    --skipLibCheck
+
 # ============================================================
 # Stage 3: Production runtime image
 # ============================================================
@@ -61,6 +70,9 @@ COPY --from=builder /app/public ./public
 
 # Copies prisma/ including the compiled seed.js
 COPY --from=builder /app/prisma ./prisma
+
+# Copies scripts/ including the compiled reset-admin-password.js
+COPY --from=builder /app/scripts ./scripts
 
 COPY --from=deps    /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=deps    /app/node_modules/@prisma ./node_modules/@prisma
