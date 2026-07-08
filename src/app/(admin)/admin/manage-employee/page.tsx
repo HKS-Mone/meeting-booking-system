@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../../../../hook/useUser';
 import type { User, Department } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
+import { useAuthStore } from '@/lib/auth-store';
 import {
   Pencil, Trash2, Plus, UserCog,
   User as UserIcon, Mail, ShieldCheck, Building2,
@@ -20,6 +21,8 @@ interface UserForm {
   departmentId: string;
   password: string;
 }
+
+type UserFormErrors = Partial<Record<keyof UserForm, string>>;
 
 const EMPTY_FORM: UserForm = {
   name: '',
@@ -41,6 +44,10 @@ function getPasswordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string 
 const initials = (name: string) =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || '??';
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 const selectStyle: React.CSSProperties = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat',
@@ -61,19 +68,24 @@ interface FormFieldsProps {
   onTogglePassword: () => void;
   isEdit: boolean;
   departments: Department[];
+  errors: UserFormErrors;
 }
 
-function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments }: Readonly<FormFieldsProps>) {
+function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit, departments, errors }: Readonly<FormFieldsProps>) {
   const pwStrength = getPasswordStrength(form.password);
+  const fieldClass = (field: keyof UserForm, extra = '') =>
+    `${inputCls} ${extra} relative z-20 ${errors[field] ? 'border-red-300 bg-red-50 hover:border-red-300 focus:ring-red-500' : ''}`;
+  const errorText = (field: keyof UserForm) =>
+    errors[field] ? <p className="relative z-30 text-xs text-red-500">{errors[field]}</p> : null;
 
   return (
-    <div className="space-y-5">
+    <div className="relative z-20 space-y-5">
 
       {/* ── Identity ───── */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Identity</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-name" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <UserIcon className="w-3.5 h-3.5 text-gray-400" />
               Full Name <span className="text-red-400">*</span>
@@ -84,10 +96,11 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               value={form.name}
               onChange={(e) => onChange({ name: e.target.value })}
               placeholder="e.g. Jane Smith"
-              className={inputCls}
+              className={fieldClass('name')}
             />
+            {errorText('name')}
           </div>
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-email" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <Mail className="w-3.5 h-3.5 text-gray-400" />
               Email Address <span className="text-red-400">*</span>
@@ -99,8 +112,9 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               onChange={(e) => onChange({ email: e.target.value })}
               placeholder="email@company.com"
               autoComplete="off"
-              className={inputCls}
+              className={fieldClass('email')}
             />
+            {errorText('email')}
           </div>
         </div>
       </div>
@@ -110,8 +124,8 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Access</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-          {/* Role selector */}
-          <div className="space-y-1.5">
+          {/* Role selector — this form only manages employees; admin accounts are created via Add Admin */}
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-role" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
               Role <span className="text-red-400">*</span>
@@ -120,17 +134,22 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               id="form-user-role"
               value={form.role}
               onChange={(e) => onChange({ role: e.target.value as UserForm['role'] })}
-              className={`${inputCls} appearance-none`}
+              disabled
+              className={fieldClass('role', 'appearance-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed')}
               style={selectStyle}
             >
               <option value="EMPLOYEE">Employee</option>
-              <option value="ADMIN">Admin</option>
-              <option value="SUPER_ADMIN">Super Admin</option>
+              {form.role !== 'EMPLOYEE' && (
+                <option value={form.role}>
+                  {form.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+                </option>
+              )}
             </select>
+            {errorText('role')}
           </div>
 
           {/* Department */}
-          <div className="space-y-1.5">
+          <div className="relative z-20 space-y-1.5">
             <label htmlFor="form-user-department" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <Building2 className="w-3.5 h-3.5 text-gray-400" />
               Department <span className="text-red-400">*</span>
@@ -139,7 +158,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               id="form-user-department"
               value={form.departmentId}
               onChange={(e) => onChange({ departmentId: e.target.value })}
-              className={`${inputCls} appearance-none`}
+              className={fieldClass('departmentId', 'appearance-none')}
               style={selectStyle}
             >
               {departments.length === 0 ? (
@@ -150,6 +169,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
                 ))
               )}
             </select>
+            {errorText('departmentId')}
           </div>
         </div>
       </div>
@@ -159,7 +179,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Security{isEdit && <span className="normal-case font-normal text-gray-400 ml-1">— leave blank to keep current</span>}
         </p>
-        <div className="space-y-1.5">
+        <div className="relative z-20 space-y-1.5">
           <label htmlFor="form-user-password" className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
             <Lock className="w-3.5 h-3.5 text-gray-400" />
             Password {!isEdit && <span className="text-red-400">*</span>}
@@ -172,7 +192,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               onChange={(e) => onChange({ password: e.target.value })}
               placeholder={isEdit ? 'Leave blank to keep unchanged' : 'Min. 8 characters'}
               autoComplete="new-password"
-              className={`${inputCls} pr-11`}
+              className={fieldClass('password', 'pr-11')}
             />
             <button
               type="button"
@@ -204,6 +224,7 @@ function UserFormFields({ form, onChange, showPassword, onTogglePassword, isEdit
               )}
             </div>
           )}
+          {errorText('password')}
         </div>
       </div>
     </div>
@@ -222,11 +243,15 @@ export default function ManageUsersPage() {
     deleteUser: apiDeleteUser,
   } = useUser();
   const addToast = useToastStore((state) => state.addToast);
+  const { currentUser } = useAuthStore();
+  const canManageEmployees = currentUser?.role === 'SUPER_ADMIN';
+  const canManageAdminRoles = currentUser?.role === 'SUPER_ADMIN';
 
   const [addOpen, setAddOpen]     = useState(false);
   const [editUser, setEditUser]   = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [form, setForm]           = useState<UserForm>(EMPTY_FORM);
+  const [formErrors, setFormErrors] = useState<UserFormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -234,35 +259,48 @@ export default function ManageUsersPage() {
     loadDepartments();
   }, [loadUsers, loadDepartments]);
 
-  const onChange = (f: Partial<UserForm>) => setForm((prev) => ({ ...prev, ...f }));
+  const onChange = (f: Partial<UserForm>) => {
+    setForm((prev) => ({ ...prev, ...f }));
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      (Object.keys(f) as Array<keyof UserForm>).forEach((field) => {
+        delete next[field];
+      });
+      return next;
+    });
+  };
   const togglePw = () => setShowPassword((v) => !v);
+  const canDeleteUser = (user: User) => canManageEmployees && (canManageAdminRoles || user.role === 'EMPLOYEE');
   const addForm = addOpen
     ? { ...form, departmentId: form.departmentId || departments[0]?.id || '' }
     : form;
 
+  const validateForm = (options: { isEdit: boolean; departmentId: string }) => {
+    const errors: UserFormErrors = {};
+    const email = form.email.trim();
+
+    if (!form.name.trim()) errors.name = 'Full name is required.';
+    if (!email) errors.email = 'Email address is required.';
+    else if (!isValidEmail(email)) errors.email = 'Enter a valid email address.';
+    if (!options.departmentId) errors.departmentId = 'Please select a department.';
+    if (!options.isEdit && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
+    if (options.isEdit && form.password && form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
+
+    setFormErrors(errors);
+    const firstError = Object.values(errors)[0];
+    if (firstError) addToast(firstError, 'error');
+    return !firstError;
+  };
+
   /* ── CRUD ────────────────── */
   const handleAdd = async () => {
+    if (!canManageEmployees) {
+      addToast('Only super admins can add users.', 'error');
+      return;
+    }
+
     const departmentId = form.departmentId || departments[0]?.id || '';
-
-    if (!form.name.trim()) {
-      addToast('Full name is required.', 'error');
-      return;
-    }
-
-    if (!form.email.trim()) {
-      addToast('Email address is required.', 'error');
-      return;
-    }
-
-    if (!departmentId) {
-      addToast('Please select a department.', 'error');
-      return;
-    }
-
-    if (form.password.length < 8) {
-      addToast('Password must be at least 8 characters.', 'error');
-      return;
-    }
+    if (!validateForm({ isEdit: false, departmentId })) return;
 
     try {
       await createUser({
@@ -275,33 +313,52 @@ export default function ManageUsersPage() {
       setForm(EMPTY_FORM);
       setShowPassword(false);
       setAddOpen(false);
+      setFormErrors({});
       addToast('Employee created successfully.', 'success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create employee.';
+      setFormErrors({ email: message });
       addToast(message, 'error');
     }
   };
 
   const handleEdit = async () => {
     if (!editUser) return;
+
+    if (!validateForm({ isEdit: true, departmentId: form.departmentId })) return;
+
     try {
       await updateUser(editUser.id, {
         name: form.name.trim() || undefined,
-        email: form.email.trim() || undefined,
+        email: form.email.trim(),
         role: form.role,
         departmentId: form.departmentId || undefined,
         password: form.password || undefined,
       });
       setShowPassword(false);
       setEditUser(null);
+      setFormErrors({});
       addToast('Employee updated successfully.', 'success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update employee.';
+      setFormErrors({ email: message });
       addToast(message, 'error');
     }
   };
 
   const handleDelete = async (u: User) => {
+    if (!canManageEmployees) {
+      addToast('Only super admins can delete users.', 'error');
+      setDeleteUser(null);
+      return;
+    }
+
+    if (u.role !== 'EMPLOYEE' && !canManageAdminRoles) {
+      addToast('Only super admins can delete admin accounts.', 'error');
+      setDeleteUser(null);
+      return;
+    }
+
     try {
       await apiDeleteUser(u.id);
       setDeleteUser(null);
@@ -313,10 +370,16 @@ export default function ManageUsersPage() {
   };
 
   const openAdd = () => {
+    if (!canManageEmployees) {
+      addToast('Only super admins can add users.', 'error');
+      return;
+    }
+
     setForm({
       ...EMPTY_FORM,
       departmentId: departments[0]?.id ?? '',
     });
+    setFormErrors({});
     setShowPassword(false);
     setAddOpen(true);
   };
@@ -329,12 +392,13 @@ export default function ManageUsersPage() {
       departmentId: u.departmentId ?? departments[0]?.id ?? '',
       password: '',
     });
+    setFormErrors({});
     setShowPassword(false);
     setEditUser(u);
   };
 
-  const closeAdd  = () => { setForm(EMPTY_FORM); setShowPassword(false); setAddOpen(false); };
-  const closeEdit = () => { setForm(EMPTY_FORM); setShowPassword(false); setEditUser(null); };
+  const closeAdd  = () => { setForm(EMPTY_FORM); setFormErrors({}); setShowPassword(false); setAddOpen(false); };
+  const closeEdit = () => { setForm(EMPTY_FORM); setFormErrors({}); setShowPassword(false); setEditUser(null); };
 
   /* ── Render ─────────────────────── */
   return (
@@ -346,8 +410,10 @@ export default function ManageUsersPage() {
         <button
           id="add-user-btn"
           onClick={openAdd}
-          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
-          style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
+          disabled={!canManageEmployees}
+          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          style={{ background: canManageEmployees ? 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' : '#94a3b8', boxShadow: canManageEmployees ? '0 4px 12px rgba(37,99,235,0.3)' : 'none' }}
+          title={canManageEmployees ? 'Add employee' : 'Only super admins can add users'}
         >
           <Plus className="w-4.5 h-4.5" />
           Add Employee
@@ -382,8 +448,10 @@ export default function ManageUsersPage() {
                 className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
                 Edit
               </button>
-              <button id={`delete-user-${u.id}`} onClick={() => setDeleteUser(u)}
-                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+              <button id={`delete-user-${u.id}`} onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast('Only super admins can delete users.', 'error')}
+                disabled={!canDeleteUser(u)}
+                className="flex-1 py-2.5 md:py-3 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={canDeleteUser(u) ? 'Delete user' : 'Only super admins can delete users'}>
                 Delete
               </button>
             </div>
@@ -444,9 +512,10 @@ export default function ManageUsersPage() {
                       </button>
                       <button
                         id={`delete-user-${u.id}`}
-                        onClick={() => setDeleteUser(u)}
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
-                        title="Delete user"
+                        onClick={() => canDeleteUser(u) ? setDeleteUser(u) : addToast('Only super admins can delete users.', 'error')}
+                        disabled={!canDeleteUser(u)}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canDeleteUser(u) ? 'Delete user' : 'Only super admins can delete users'}
                       >
                         <Trash2 className="w-4.5 h-4.5" />
                       </button>
@@ -469,6 +538,7 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={false}
             departments={departments}
+            errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeAdd} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -497,6 +567,7 @@ export default function ManageUsersPage() {
             onTogglePassword={togglePw}
             isEdit={true}
             departments={departments}
+            errors={formErrors}
           />
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button onClick={closeEdit} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">

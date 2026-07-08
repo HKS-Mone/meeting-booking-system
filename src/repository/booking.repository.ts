@@ -7,14 +7,20 @@ const bookingInclude = {
 } satisfies Prisma.BookingInclude;
 
 function dateRangeForDay(date: Date) {
-  // Use UTC methods so the range correctly brackets the UTC calendar day
-  // that was stored (dates are persisted as UTC via Prisma / MySQL @db.Date).
+
   const start = new Date(date);
   start.setUTCHours(0, 0, 0, 0);
   const end = new Date(date);
   end.setUTCHours(23, 59, 59, 999);
-
   return { start, end };
+}
+
+function timeToMinutes(time: Date): number {
+  return time.getUTCHours() * 60 + time.getUTCMinutes();
+}
+
+function intervalsOverlap(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
+  return aStart < bEnd && aEnd > bStart;
 }
 
 export class BookingRepository {
@@ -43,7 +49,6 @@ export class BookingRepository {
   }
 
   static async findByDate(date: Date) {
-    // Match bookings whose `date` field falls on the same calendar day
     const { start, end } = dateRangeForDay(date);
 
     return prisma.booking.findMany({
@@ -56,7 +61,6 @@ export class BookingRepository {
     });
   }
 
-  // ── Write ─────────────────────────────────────────────────────────────────
 
   static async findOverlapping(
     date: Date,
@@ -66,17 +70,24 @@ export class BookingRepository {
   ) {
     const { start, end } = dateRangeForDay(date);
 
-    return prisma.booking.findFirst({
+    const sameDayBookings = await prisma.booking.findMany({
       where: {
         isActive: true,
         id: excludeBookingId === undefined ? undefined : { not: excludeBookingId },
         date: { gte: start, lte: end },
-        startTime: { lt: endTime },
-        endTime: { gt: startTime },
       },
       include: bookingInclude,
       orderBy: { startTime: 'asc' },
     });
+
+    const newStart = timeToMinutes(startTime);
+    const newEnd = timeToMinutes(endTime);
+
+    return (
+      sameDayBookings.find((booking) =>
+        intervalsOverlap(timeToMinutes(booking.startTime), timeToMinutes(booking.endTime), newStart, newEnd),
+      ) ?? null
+    );
   }
 
   static async create(data: Prisma.BookingUncheckedCreateInput) {

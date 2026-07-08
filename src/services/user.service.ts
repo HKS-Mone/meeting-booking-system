@@ -6,6 +6,7 @@ import type { User, Department, Role } from '@/lib/types';
 import { createHash } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { authCookie, serverAuthService } from '@/services/auth-server.service';
+import type { Department as DbDepartment, Prisma, Role as PrismaRole } from '@prisma/client';
 
 export interface CreateUserInput {
   name: string;
@@ -23,7 +24,9 @@ export interface UpdateUserInput {
   password?: string;
 }
 
-function toSafeUser(user: any): User {
+type DbUserWithDepartment = Prisma.UserGetPayload<{ include: { department: true } }>;
+
+function toSafeUser(user: DbUserWithDepartment): User {
   return {
     id: String(user.id),
     name: user.name,
@@ -40,7 +43,7 @@ function toSafeUser(user: any): User {
   };
 }
 
-function toSafeDepartment(dept: any): Department {
+function toSafeDepartment(dept: DbDepartment): Department {
   return {
     id: String(dept.id),
     name: dept.name,
@@ -49,6 +52,24 @@ function toSafeDepartment(dept: any): Department {
 
 function hashPassword(password: string): string {
   return createHash('sha256').update(password).digest('hex');
+}
+
+async function getAuthenticatedRole(): Promise<Role> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authCookie.name)?.value;
+  const authResult = await serverAuthService.authenticateToken(token);
+
+  if (!authResult.success || !authResult.user) {
+    throw new Error('Unauthorized.');
+  }
+
+  return authResult.user.role;
+}
+
+function ensureSuperAdmin(role: Role, message = 'Only super admins can perform this action.'): void {
+  if (role !== 'SUPER_ADMIN') {
+    throw new Error(message);
+  }
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -66,7 +87,7 @@ export async function getDepartments(): Promise<Department[]> {
 export async function getUsersByRole(role: Role): Promise<User[]> {
   const dbUsers = await prisma.user.findMany({
     where: {
-      role: role as any,
+      role: role as PrismaRole,
       isActive: true,
     },
     include: {
@@ -85,11 +106,14 @@ export async function getUserById(id: string): Promise<User | null> {
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
+  const actorRole = await getAuthenticatedRole();
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
+
   const passwordHash = input.password ? hashPassword(input.password) : undefined;
   const dbUser = await UserRepository.create({
     name: input.name,
     email: input.email.toLowerCase(),
-    role: input.role as any,
+    role: input.role as PrismaRole,
     departmentId: input.departmentId ? Number(input.departmentId) : null,
     password: passwordHash,
   });
@@ -97,10 +121,18 @@ export async function createUser(input: CreateUserInput): Promise<User> {
 }
 
 export async function updateUser(id: string, input: UpdateUserInput): Promise<User | null> {
-  const updateData: any = {};
+  const actorRole = await getAuthenticatedRole();
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
+
+  if (input.role !== undefined) {
+    const currentUser = await UserRepository.findById(Number(id));
+    if (!currentUser) return null;
+  }
+
+  const updateData: Prisma.UserUncheckedUpdateInput = {};
   if (input.name !== undefined) updateData.name = input.name;
   if (input.email !== undefined) updateData.email = input.email.toLowerCase();
-  if (input.role !== undefined) updateData.role = input.role as any;
+  if (input.role !== undefined) updateData.role = input.role as PrismaRole;
   if (input.departmentId !== undefined) {
     updateData.departmentId = input.departmentId ? Number(input.departmentId) : null;
   }
@@ -112,6 +144,12 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Us
 }
 
 export async function deleteUser(id: string): Promise<boolean> {
+  const actorRole = await getAuthenticatedRole();
+  ensureSuperAdmin(actorRole, 'Only super admins can manage employees.');
+
+  const targetUser = await UserRepository.findById(Number(id));
+  if (!targetUser) return false;
+
   await UserRepository.delete(Number(id));
   return true;
 }
@@ -141,7 +179,8 @@ export async function updatePassword(currentPassword: string, newPassword: strin
     await UserRepository.updatePassword(userId, newPasswordHash);
     
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'An error occurred while updating the password.' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'An error occurred while updating the password.';
+    return { success: false, error: message };
   }
 }

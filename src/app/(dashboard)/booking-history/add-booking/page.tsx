@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatTime } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useAuth } from '../../../../../../hook/useAuth';
+import { useAuth } from '../../../../../hook/useAuth';
 import {
   createBookingAction,
   getBookingsByDateAction,
@@ -107,25 +107,22 @@ export default function AddBookingPage() {
     };
   }, [addToast, canUsePage]);
 
+  // Load the "Booked Meetings" panel for the currently selected calendar date.
+  const loadBookingsForDate = useCallback(async () => {
+    const dateStr = format(calDate, 'yyyy-MM-dd');
+    const result = await getBookingsByDateAction(dateStr);
+
+    if (result.success) {
+      setTodaysBookings(result.bookings ?? []);
+    } else {
+      addToast(result.error ?? 'Failed to load bookings.', 'error');
+    }
+  }, [addToast, calDate]);
+
   useEffect(() => {
     if (!canUsePage) return;
-    let ignore = false;
-
-    const dateStr = format(calDate, 'yyyy-MM-dd');
-    getBookingsByDateAction(dateStr).then((result) => {
-      if (ignore) return;
-
-      if (result.success) {
-        setTodaysBookings(result.bookings ?? []);
-      } else {
-        addToast(result.error ?? 'Failed to load bookings.', 'error');
-      }
-    });
-
-    return () => {
-      ignore = true;
-    };
-  }, [addToast, calDate, canUsePage]);
+    void loadBookingsForDate();
+  }, [canUsePage, loadBookingsForDate]);
 
   const fieldVal = (f: Partial<BookingForm>) => {
     setForm((prev) => {
@@ -199,6 +196,8 @@ export default function AddBookingPage() {
         return;
       }
       addToast('Booking created successfully.', 'success');
+      setForm((prev) => ({ ...prev, description: '' }));
+      await loadBookingsForDate();
     } catch {
       addToast('An unexpected error occurred. Please try again.', 'error');
     } finally {
@@ -207,7 +206,7 @@ export default function AddBookingPage() {
   };
 
   const handleCancel = () => {
-    router.push('/admin/manage-bookings');
+    router.push('/booking-history');
   };
 
   if (isCheckingSession) {
@@ -232,7 +231,7 @@ export default function AddBookingPage() {
           className="hover:text-gray-700 transition-colors flex items-center gap-1"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Manage Bookings
+          My Bookings
         </button>
         <span>/</span>
         <span className="text-gray-700 font-medium">Add New Booking</span>

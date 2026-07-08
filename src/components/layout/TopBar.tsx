@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useUIStore } from '@/lib/ui-store';
 import { usePathname } from 'next/navigation';
@@ -8,13 +8,13 @@ import { usePathname } from 'next/navigation';
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/meeting-rooms': 'Meeting Rooms',
-  '/book-room': 'Book Meeting Room',
-  '/calendar': 'Calendar',
+  '/book-room': 'M ONE INTEGRATION PVT LTD',
+  '/calendar': 'M ONE INTEGRATION PVT LTD',
   '/booking-history': 'Meeting Bookings',
   '/departments': 'Departments',
   '/reports': 'Reports',
   '/settings': 'Settings',
-  '/admin/dashboard': 'Admin Dashboard',
+  '/admin/dashboard': 'M ONE INTEGRATION PVT LTD',
   '/admin/manage-bookings': 'Manage Bookings',
   '/admin/manage-rooms': 'Manage Rooms',
   '/admin/manage-departments': 'Manage Departments',
@@ -31,7 +31,7 @@ function getPageTitle(pathname: string): string {
   for (const [key, value] of Object.entries(PAGE_TITLES)) {
     if (pathname.startsWith(key + '/')) return value;
   }
-  return 'Mone Meeting';
+  return 'M ONE INTEGRATION PVT LTD';
 }
 
 export default function TopBar() {
@@ -39,14 +39,16 @@ export default function TopBar() {
   const { toggleSidebar } = useUIStore();
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
+  const displayName = currentUser?.name ?? 'Guest';
+  const departmentName = currentUser?.department?.name ?? 'No department';
 
-  const initials = currentUser?.name
-    ? currentUser.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+  const initials = displayName !== 'Guest'
+    ? displayName
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
     : '??';
 
   return (
@@ -72,21 +74,24 @@ export default function TopBar() {
         </div>
 
         {/* Right: user avatar */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Divider — hidden on very small screens */}
           <div className="hidden xs:block h-8 w-px bg-gray-200" />
 
           {/* User */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <div
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs sm:text-sm font-semibold cursor-default select-none transition-transform duration-200 hover:scale-105"
-              title={currentUser?.name ?? 'Guest'}
+              title={`${displayName} - ${departmentName}`}
             >
               {initials}
             </div>
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-gray-800 leading-tight">
-                {currentUser?.name ?? 'Guest'}
+            <div className="block text-right min-w-0 max-w-[92px] sm:max-w-[180px]">
+              <p className="text-xs sm:text-sm font-semibold text-gray-800 leading-tight truncate">
+                {displayName}
+              </p>
+              <p className="block text-[11px] sm:text-xs font-medium text-gray-500 leading-tight truncate">
+                {departmentName}
               </p>
             </div>
           </div>
