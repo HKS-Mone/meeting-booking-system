@@ -51,7 +51,8 @@ jobs:
             fi
 
             # ── Deploy ──
-            git pull origin main
+            git fetch origin main
+            git reset --hard FETCH_HEAD
             docker compose pull
             docker compose up -d --build --remove-orphans
 
