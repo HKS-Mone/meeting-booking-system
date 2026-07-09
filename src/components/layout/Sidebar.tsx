@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   Calendar,
   ClipboardList,
+  LayoutDashboard,
   LogOut,
   X,
   Settings,
@@ -18,6 +19,7 @@ import { useUIStore } from '@/lib/ui-store';
 import { useRouter } from 'next/navigation';
 
 const navLinks = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/booking-history', label: 'My Bookings', icon: ClipboardList },
   { href: '/settings', label: 'Settings', icon: Settings },

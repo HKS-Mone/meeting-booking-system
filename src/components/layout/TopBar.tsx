@@ -6,14 +6,14 @@ import { useUIStore } from '@/lib/ui-store';
 import { usePathname } from 'next/navigation';
 
 const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/meeting-rooms': 'Meeting Rooms',
+  '/dashboard': 'M ONE INTEGRATION PVT LTD',
+  '/meeting-rooms': 'M ONE INTEGRATION PVT LTD',
   '/book-room': 'M ONE INTEGRATION PVT LTD',
   '/calendar': 'M ONE INTEGRATION PVT LTD',
-  '/booking-history': 'Meeting Bookings',
-  '/departments': 'Departments',
-  '/reports': 'Reports',
-  '/settings': 'Settings',
+  '/booking-history': 'M ONE INTEGRATION PVT LTD',
+  '/departments': 'M ONE INTEGRATION PVT LTD',
+  '/reports': 'M ONE INTEGRATION PVT LTD',
+  '/settings': 'M ONE INTEGRATION PVT LTD',
   '/admin/dashboard': 'M ONE INTEGRATION PVT LTD',
   '/admin/manage-bookings': 'Manage Bookings',
   '/admin/manage-rooms': 'Manage Rooms',

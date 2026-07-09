@@ -3,16 +3,19 @@ export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { Video } from 'lucide-react';
 import { AdminRepository } from '@/repository/admin.repository';
 import { getBookingsAction } from '@/services/booking.service';
 import StatsCard from '@/components/dashboard/StatsCard';
 import TodaysMeetingsTable from '@/components/dashboard/TodaysMeetingsTable';
+import { formatTime } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Mone Meeting',
   description: 'Administrator overview of bookings, rooms, and departments.',
 };
 
+// Time complexity: O(n), where n is the number of bookings.
 export default async function AdminDashboardPage() {
   const [stats, bookingsResult] = await Promise.all([
     AdminRepository.getDashboardStats(),
@@ -29,6 +32,7 @@ export default async function AdminDashboardPage() {
     const end = new Date(b.endTime);
     return start <= now && end >= now;
   });
+  const currentOngoingBooking = activeNow[0];
   const upcoming = allBookings.filter((b) => new Date(b.startTime) > now);
 
   return (
@@ -67,14 +71,39 @@ export default async function AdminDashboardPage() {
       </section>
 
       <div className="grid gap-3 sm:gap-4">
-        <StatsCard
-          title="Ongoing Now"
-          value={activeNow.length}
-          iconName="Video"
-          iconColor="text-orange-600"
-          iconBg="bg-orange-50"
-          linkHref=""
-        />
+        <div className="min-h-[190px] rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md sm:min-h-[180px] sm:p-5">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-gray-500 sm:text-sm">Ongoing Now</p>
+              <p className="mt-1 text-2xl font-bold leading-none text-gray-900 sm:text-3xl">
+                {activeNow.length}
+              </p>
+            </div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 sm:h-14 sm:w-14">
+              <Video className="h-5 w-5 text-orange-600 sm:h-7 sm:w-7" />
+            </div>
+          </div>
+          {currentOngoingBooking ? (
+            <div className="mt-6 grid gap-3 sm:mt-5 sm:grid-cols-2">
+              <div className="rounded-lg bg-orange-50/70 px-3 py-2">
+                <p className="text-[11px] font-medium uppercase text-orange-600">Time period</p>
+                <p className="mt-1 truncate text-sm font-semibold text-gray-900">
+                  {formatTime(currentOngoingBooking.startTime)} - {formatTime(currentOngoingBooking.endTime)}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 px-3 py-2">
+                <p className="text-[11px] font-medium uppercase text-gray-500">Department</p>
+                <p className="mt-1 truncate text-sm font-semibold text-gray-900">
+                  {currentOngoingBooking.department?.name ?? 'No department'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-6 text-sm font-medium text-gray-400 sm:mt-5">
+              No ongoing meeting now.
+            </p>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <StatsCard
             title="Meetings Today"

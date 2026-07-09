@@ -10,7 +10,7 @@ import type { User } from '@/lib/types';
 function getPostLoginPath(user?: User) {
   return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
     ? '/admin/dashboard'
-    : '/calendar';
+    : '/dashboard';
 }
 
 export default function LoginPage() {
