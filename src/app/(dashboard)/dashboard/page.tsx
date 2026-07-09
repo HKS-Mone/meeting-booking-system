@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { format } from 'date-fns';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Plus } from 'lucide-react';
 import StatsCard from '@/components/dashboard/StatsCard';
 import UpcomingMeetings from '@/components/dashboard/UpcomingMeetings';
 import MiniCalendar from '@/components/dashboard/MiniCalendar';
@@ -103,6 +104,16 @@ export default async function DashboardPage() {
           iconBg="bg-red-50"
           trend="This month"
         />
+      </div>
+
+      <div className="flex justify-center">
+        <Link
+          href="/booking-history/add-booking"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+        >
+          <Plus className="h-4 w-7" />
+          Add Booking
+        </Link>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
