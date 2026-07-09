@@ -44,8 +44,8 @@ jobs:
               fi
               echo "✅ Backup verified ($(du -h "$BACKUP_FILE" | cut -f1))"
 
-              # Retain backups for 5 days
-              find "$BACKUP_DIR" -name '*.sql.gz' -mtime +5 -delete
+              # Retain backups for 1 day
+              find "$BACKUP_DIR" -name '*.sql.gz' -mtime +1 -delete
             else
               echo "ℹ️  booking_db not running (first deploy?) — skipping backup."
             fi

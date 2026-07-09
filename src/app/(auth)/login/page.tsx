@@ -95,14 +95,14 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="text-gray-900 font-bold text-xl leading-none block tracking-tight">
-              MoneMeeting
+              M ONE MEETING
             </span>
           </div>
         </div>
 
         {/* Welcome heading */}
         <h1 className="text-2xl sm:text-[26px] font-extrabold text-gray-900 text-center tracking-tight">
-          WELCOME BACK!
+          WELCOME
         </h1>
         <p className="text-blue-500 text-sm mt-1.5 mb-7 text-center font-medium">
           Please Login to Your Account
