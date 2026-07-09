@@ -12,7 +12,7 @@ export default async function Home() {
       redirect('/admin/dashboard');
     }
 
-    redirect('/calendar');
+    redirect('/dashboard');
   }
 
   redirect('/login');
