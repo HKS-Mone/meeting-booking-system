@@ -2,14 +2,14 @@
 
 import {
   Building2, CheckCircle, Video, LayoutGrid,
-  DoorOpen, Calendar, Users, BarChart2,
+  DoorOpen, Calendar, Users, BarChart2, XCircle,
   LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export type IconName =
   | 'Building2' | 'CheckCircle' | 'Video' | 'LayoutGrid'
-  | 'DoorOpen' | 'Calendar' | 'Users' | 'BarChart2';
+  | 'DoorOpen' | 'Calendar' | 'Users' | 'BarChart2' | 'XCircle';
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
   Building2,
@@ -20,6 +20,7 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   Calendar,
   Users,
   BarChart2,
+  XCircle,
 };
 
 interface StatsCardProps {
