@@ -12,7 +12,7 @@ import { authService } from '@/services/auth.service';
 import { getMeetingStatus } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Dashboard | Mone Meeting',
+  title: 'M ONE INTEGRATION PVT LTD',
   description: 'Employee overview of meeting room bookings.',
 };
 
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
           </h1>
           <p className="mt-1 text-sm text-gray-500">Here&apos;s your meeting overview for today.</p>
         </div>
-        <div className="inline-flex w-fit items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-2.5 shadow-sm">
+        <div className="inline-flex w-fit items-center gap-3 self-center rounded-xl border border-gray-100 bg-white px-4 py-2.5 shadow-sm sm:self-auto">
           <CalendarDays className="h-5 w-5 text-blue-600" />
           <div>
             <p className="text-sm font-semibold text-gray-800">{format(now, 'MMM dd, yyyy')}</p>
