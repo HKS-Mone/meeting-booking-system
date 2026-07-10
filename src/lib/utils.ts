@@ -24,6 +24,28 @@ export function formatTime(iso: string): string {
   return format(new Date(iso), 'hh:mm a');
 }
 
+
+export const BUSINESS_TIME_ZONE = 'Asia/Colombo';
+
+export function getBusinessNowIso(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: BUSINESS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '00';
+
+  const hour = get('hour') === '24' ? '00' : get('hour');
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}:${get('second')}`;
+}
+
 export function formatDateShort(iso: string): string {
   return format(parseDisplayDate(iso), 'MMM dd');
 }

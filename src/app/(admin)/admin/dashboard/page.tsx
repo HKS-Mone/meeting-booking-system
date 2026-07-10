@@ -2,13 +2,12 @@ export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { Video } from 'lucide-react';
 import { AdminRepository } from '@/repository/admin.repository';
 import { getBookingsAction } from '@/services/booking.service';
 import StatsCard from '@/components/dashboard/StatsCard';
 import TodaysMeetingsTable from '@/components/dashboard/TodaysMeetingsTable';
-import { formatTime } from '@/lib/utils';
+import { formatTime, getBusinessNowIso } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Mone Meeting',
@@ -23,17 +22,14 @@ export default async function AdminDashboardPage() {
   ]);
 
   const allBookings = bookingsResult.bookings ?? [];
-  const now = new Date();
-  const today = format(now, 'yyyy-MM-dd');
-
+  const nowIso = getBusinessNowIso();
+  const today = nowIso.slice(0, 10);
   const todayBookings = allBookings.filter((b) => b.date === today);
-  const activeNow = allBookings.filter((b) => {
-    const start = new Date(b.startTime);
-    const end = new Date(b.endTime);
-    return start <= now && end >= now;
-  });
+  const activeNow = allBookings.filter(
+    (b) => b.startTime <= nowIso && b.endTime >= nowIso,
+  );
   const currentOngoingBooking = activeNow[0];
-  const upcoming = allBookings.filter((b) => new Date(b.startTime) > now);
+  const upcoming = allBookings.filter((b) => b.startTime > nowIso);
 
   return (
     <div className="space-y-5 sm:space-y-6">
