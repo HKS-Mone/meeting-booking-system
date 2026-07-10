@@ -8,7 +8,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import {
   Pencil, Trash2, Plus, UserCog,
   User as UserIcon, Mail, ShieldCheck, Building2,
-  Lock, Eye, EyeOff, AlertTriangle,
+  Lock, Eye, EyeOff, AlertTriangle, Users, UserPlus,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { useToastStore } from '@/components/ui/Toast';
@@ -271,6 +271,25 @@ export default function ManageUsersPage() {
   };
   const togglePw = () => setShowPassword((v) => !v);
   const canDeleteUser = (user: User) => canManageEmployees && (canManageAdminRoles || user.role === 'EMPLOYEE');
+
+  /* Tally employee overview figures in a single pass. Time complexity: O(n). */
+  const monthKey = new Date().toISOString().slice(0, 7); // yyyy-MM
+  const overview = users.reduce(
+    (acc, u) => {
+      acc.total++;
+      if (u.role === 'EMPLOYEE') acc.employees++;
+      if (u.createdAt.startsWith(monthKey)) acc.newThisMonth++;
+      return acc;
+    },
+    { total: 0, employees: 0, newThisMonth: 0 },
+  );
+
+  const overviewCards = [
+    { title: 'Total Users',    value: overview.total,        sub: 'All accounts',    Icon: Users,     iconColor: 'text-indigo-600',  iconBg: 'bg-indigo-50',  subColor: 'text-gray-400' },
+    { title: 'Employees',      value: overview.employees,    sub: 'Active staff',    Icon: UserIcon,  iconColor: 'text-blue-600',    iconBg: 'bg-blue-50',    subColor: 'text-gray-400' },
+    { title: 'Departments',    value: departments.length,    sub: 'Total teams',     Icon: Building2, iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50', subColor: 'text-gray-400' },
+    { title: 'New This Month', value: overview.newThisMonth, sub: 'Recently joined', Icon: UserPlus,  iconColor: 'text-amber-600',   iconBg: 'bg-amber-50',   subColor: 'text-emerald-600' },
+  ];
   const addForm = addOpen
     ? { ...form, departmentId: form.departmentId || departments[0]?.id || '' }
     : form;
@@ -418,6 +437,30 @@ export default function ManageUsersPage() {
           <Plus className="w-4.5 h-4.5" />
           Add Employee
         </button>
+      </div>
+
+      {/* ── Employees overview dashboard ────────────── */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Manage Employees</h1>
+        <p className="mt-1 text-sm text-gray-500">Overview of all users, staff and departments</p>
+
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mt-5">
+          {overviewCards.map(({ title, value, sub, Icon, iconColor, iconBg, subColor }) => (
+            <div
+              key={title}
+              className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow duration-200"
+            >
+              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none">{value}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 truncate">{title}</p>
+                <p className={`text-[11px] mt-0.5 ${subColor}`}>{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── MOBILE: Card list ────────────── */}
