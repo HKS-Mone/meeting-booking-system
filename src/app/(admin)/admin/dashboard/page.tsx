@@ -137,9 +137,6 @@ export default async function AdminDashboardPage() {
               <p className="text-xs sm:text-sm font-medium text-black-500 truncate">Next Meeting</p>
               {nextMeeting ? (
                 <>
-                  <p className="mt-1 truncate text-sm font-semibold leading-tight text-gray-900">
-                    {nextMeeting.purpose}
-                  </p>
                   <p className="mt-1 truncate text-xs text-gray-500">
                     {formatDate(nextMeeting.startTime)} · {formatTime(nextMeeting.startTime)} - {formatTime(nextMeeting.endTime)}
                   </p>
