@@ -6,7 +6,7 @@ import { Video, Calendar, CheckCircle } from 'lucide-react';
 import { AdminRepository } from '@/repository/admin.repository';
 import { getBookingsAction } from '@/services/booking.service';
 import TodaysMeetingsTable from '@/components/dashboard/TodaysMeetingsTable';
-import { formatTime, getBusinessNowIso } from '@/lib/utils';
+import { formatDate, formatTime, getBusinessNowIso } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Mone Meeting',
@@ -29,6 +29,12 @@ export default async function AdminDashboardPage() {
   );
   const currentOngoingBooking = activeNow[0];
   const upcoming = allBookings.filter((b) => b.startTime > nowIso);
+  // The next meeting is the upcoming booking with the earliest start time.
+  const nextMeeting = upcoming.reduce(
+    (earliest, booking) =>
+      earliest && earliest.startTime <= booking.startTime ? earliest : booking,
+    upcoming[0],
+  );
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -119,7 +125,7 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <div className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center gap-3 sm:gap-4 border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Meetings Today</p>
+              <p className="text-xs sm:text-sm font-medium text-black-500 truncate">Meetings Today</p>
               <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 leading-none">{stats.todaysBookings}</p>
             </div>
             <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 bg-sky-50">
@@ -128,8 +134,22 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center gap-3 sm:gap-4 border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Active Bookings</p>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 leading-none">{upcoming.length + activeNow.length}</p>
+              <p className="text-xs sm:text-sm font-medium text-black-500 truncate">Next Meeting</p>
+              {nextMeeting ? (
+                <>
+                  <p className="mt-1 truncate text-sm font-semibold leading-tight text-gray-900">
+                    {nextMeeting.purpose}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-gray-500">
+                    {formatDate(nextMeeting.startTime)} · {formatTime(nextMeeting.startTime)} - {formatTime(nextMeeting.endTime)}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-gray-500">
+                    {nextMeeting.department?.name ?? 'No department'}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-sm font-medium text-gray-400">No upcoming meeting.</p>
+              )}
             </div>
             <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-50">
               <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-600" />
