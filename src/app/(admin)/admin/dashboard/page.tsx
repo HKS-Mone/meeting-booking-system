@@ -67,27 +67,44 @@ export default async function AdminDashboardPage() {
       </section>
 
       <div className="grid gap-3 sm:gap-4">
-        <div className="min-h-[190px] rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md sm:min-h-[180px] sm:p-5">
+        <div
+          className={`group min-h-[240px] rounded-xl border border-l-4 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:min-h-[230px] sm:p-5 ${
+            currentOngoingBooking
+              ? 'border-orange-200 border-l-orange-500 bg-gradient-to-br from-orange-50 via-white to-white hover:border-orange-300 hover:shadow-orange-100'
+              : 'border-gray-100 border-l-gray-200 bg-white hover:border-gray-200'
+          }`}
+        >
           <div className="flex items-start gap-3 sm:gap-4">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-gray-500 sm:text-sm">Ongoing Now</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-gray-900 sm:text-3xl">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-xs font-medium text-gray-500 sm:text-sm">Ongoing Now</p>
+                {currentOngoingBooking && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-600">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-500 opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-orange-500" />
+                    </span>
+                    Live
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-3xl font-bold leading-none text-gray-900 sm:text-4xl">
                 {activeNow.length}
               </p>
             </div>
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 sm:h-14 sm:w-14">
-              <Video className="h-5 w-5 text-orange-600 sm:h-7 sm:w-7" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:bg-orange-100 sm:h-14 sm:w-14">
+              <Video className="h-5 w-5 text-orange-600 transition-transform duration-200 group-hover:-translate-y-0.5 sm:h-7 sm:w-7" />
             </div>
           </div>
           {currentOngoingBooking ? (
-            <div className="mt-6 grid gap-3 sm:mt-5 sm:grid-cols-2">
-              <div className="rounded-lg bg-orange-50/70 px-3 py-2">
+            <div className="mt-8 grid gap-3 sm:mt-7 sm:grid-cols-2">
+              <div className="rounded-lg bg-orange-50/70 px-3 py-2.5 transition-colors duration-200 group-hover:bg-orange-100/70">
                 <p className="text-[11px] font-medium uppercase text-orange-600">Time period</p>
                 <p className="mt-1 truncate text-sm font-semibold text-gray-900">
                   {formatTime(currentOngoingBooking.startTime)} - {formatTime(currentOngoingBooking.endTime)}
                 </p>
               </div>
-              <div className="rounded-lg bg-slate-50 px-3 py-2">
+              <div className="rounded-lg bg-slate-50 px-3 py-2.5 transition-colors duration-200 group-hover:bg-slate-100">
                 <p className="text-[11px] font-medium uppercase text-gray-500">Department</p>
                 <p className="mt-1 truncate text-sm font-semibold text-gray-900">
                   {currentOngoingBooking.department?.name ?? 'No department'}
@@ -95,7 +112,7 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
           ) : (
-            <p className="mt-6 text-sm font-medium text-gray-400 sm:mt-5">
+            <p className="mt-8 text-sm font-medium text-gray-400 sm:mt-7">
               No ongoing meeting now.
             </p>
           )}
