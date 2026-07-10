@@ -95,7 +95,7 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="text-gray-900 font-bold text-xl leading-none block tracking-tight">
-              M ONE MEETING
+              M ONE MEETING ROOM
             </span>
           </div>
         </div>
