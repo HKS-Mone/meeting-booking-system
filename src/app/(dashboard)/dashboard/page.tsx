@@ -7,8 +7,7 @@ import { CalendarDays, Plus } from 'lucide-react';
 import StatsCard from '@/components/dashboard/StatsCard';
 import UpcomingMeetings from '@/components/dashboard/UpcomingMeetings';
 import MiniCalendar from '@/components/dashboard/MiniCalendar';
-import { getMyBookingsAction } from '@/services/booking.service';
-import { authService } from '@/services/auth.service';
+import { getMyBookings, getSessionUser } from '@/services/booking.reader';
 import { getMeetingStatus } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -24,13 +23,12 @@ function getGreeting(hour: number): string {
 
 // Time complexity: O(n log n), where n is the number of bookings for the current user.
 export default async function DashboardPage() {
-  const [bookingsResult, sessionResult] = await Promise.all([
-    getMyBookingsAction(),
-    authService.getSession(),
+  const [bookings, sessionUser] = await Promise.all([
+    getMyBookings(),
+    getSessionUser(),
   ]);
 
-  const bookings = bookingsResult.bookings ?? [];
-  const firstName = sessionResult.success ? sessionResult.user?.name.split(' ')[0] : undefined;
+  const firstName = sessionUser?.name.split(' ')[0];
   const now = new Date();
   const monthKey = format(now, 'yyyy-MM');
 
@@ -65,9 +63,9 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {!bookingsResult.success && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {bookingsResult.error ?? 'Failed to load dashboard bookings.'}
+      {!sessionUser && (
+        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          Your session has expired. Please <Link href="/login" className="font-semibold underline">sign in</Link> again to see your bookings.
         </div>
       )}
 
