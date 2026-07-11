@@ -91,3 +91,9 @@ export async function getMyBookings(): Promise<Booking[]> {
   const rows = await BookingRepository.findByUserId(userId);
   return rows.map((row) => mapBooking(row));
 }
+
+/** Return all bookings across every user (for shared-room views like "Ongoing Now"). */
+export async function getAllBookings(): Promise<Booking[]> {
+  const rows = await BookingRepository.findAll();
+  return rows.map((row) => mapBooking(row));
+}

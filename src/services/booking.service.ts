@@ -2,6 +2,7 @@
 
 import { BookingRepository } from '@/repository/booking.repository';
 import { getAuthenticatedUserId, mapBooking } from '@/services/booking.reader';
+import { getBusinessNowIso } from '@/lib/utils';
 import type { Booking } from '@/lib/types';
 
 type BookingUpdateData = {
@@ -113,6 +114,16 @@ function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
 
+function isPastDateTime(dateStr: string, time: ParsedTime): boolean {
+  const nowIso = getBusinessNowIso();
+  const nowDateStr = nowIso.slice(0, 10);
+  if (dateStr < nowDateStr) return true;
+  if (dateStr > nowDateStr) return false;
+
+  const nowMinutes = Number(nowIso.slice(11, 13)) * 60 + Number(nowIso.slice(14, 16));
+  return timeToMinutes(time) < nowMinutes;
+}
+
 // ─── Server Actions ───────────────────────────────────────────────────────────
 
 /** Return all active bookings. */
@@ -171,6 +182,10 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
 
     if (timeToMinutes(startTimeParts) >= timeToMinutes(endTimeParts)) {
       return { success: false, error: 'End time must be after start time.' };
+    }
+
+    if (isPastDateTime(input.date, startTimeParts)) {
+      return { success: false, error: 'Cannot create a booking for a past date or time.' };
     }
 
     const startTime = timeOnlyToDbDate(startTimeParts);
