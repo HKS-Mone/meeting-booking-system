@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Video, Calendar, CheckCircle } from 'lucide-react';
-import { AdminRepository } from '@/repository/admin.repository';
+import { Video, CheckCircle } from 'lucide-react';
 import { getBookingsAction } from '@/services/booking.service';
 import TodaysMeetingsTable from '@/components/dashboard/TodaysMeetingsTable';
 import { formatDate, formatTime, getBusinessNowIso } from '@/lib/utils';
@@ -15,10 +14,7 @@ export const metadata: Metadata = {
 
 // Time complexity: O(n), where n is the number of bookings.
 export default async function AdminDashboardPage() {
-  const [stats, bookingsResult] = await Promise.all([
-    AdminRepository.getDashboardStats(),
-    getBookingsAction(),
-  ]);
+  const bookingsResult = await getBookingsAction();
 
   const allBookings = bookingsResult.bookings ?? [];
   const nowIso = getBusinessNowIso();
@@ -94,7 +90,7 @@ export default async function AdminDashboardPage() {
                 )}
               </div>
               <p className="mt-1 text-3xl font-bold leading-none text-gray-900 sm:text-4xl">
-                {activeNow.length}
+                WIP Meeting
               </p>
             </div>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:bg-orange-100 sm:h-14 sm:w-14">
@@ -122,17 +118,8 @@ export default async function AdminDashboardPage() {
             </p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:gap-4">
-          <div className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center gap-3 sm:gap-4 border border-gray-100 hover:shadow-md transition-shadow duration-200">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-black-500 truncate">Meetings Today</p>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 leading-none">{stats.todaysBookings}</p>
-            </div>
-            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 bg-sky-50">
-              <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-sky-600" />
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center gap-3 sm:gap-4 border border-gray-100 hover:shadow-md transition-shadow duration-200">
+        <div className="grid grid-cols-1 gap-2 sm:gap-4">
+          <div className="bg-white rounded-xl shadow-sm px-4 py-2.5 flex items-center gap-3 sm:gap-4 border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex-1 min-w-0">
               <p className="text-xs sm:text-sm font-medium text-black-500 truncate">Next Meeting</p>
               {nextMeeting ? (
@@ -148,8 +135,8 @@ export default async function AdminDashboardPage() {
                 <p className="mt-1 text-sm font-medium text-gray-400">No upcoming meeting.</p>
               )}
             </div>
-            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-50">
-              <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-600" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-50">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
             </div>
           </div>
         </div>
