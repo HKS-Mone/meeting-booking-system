@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatTime } from '@/lib/utils';
+import { formatTime, getBusinessNowIso } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useAuth } from '../../../../../hook/useAuth';
 import {
@@ -32,7 +32,7 @@ interface BookingForm {
   endTime: string;
 }
 
-const today = format(new Date(), 'yyyy-MM-dd');
+const today = getBusinessNowIso().slice(0, 10);
 const START_HOUR = 6;
 const END_HOUR = 19;
 
@@ -181,6 +181,14 @@ export default function AddBookingPage() {
       return;
     }
 
+    const nowIso = getBusinessNowIso();
+    const nowDateStr = nowIso.slice(0, 10);
+    const nowTimeStr = nowIso.slice(11, 16);
+    if (form.date < nowDateStr || (form.date === nowDateStr && form.startTime < nowTimeStr)) {
+      addToast('Cannot create a booking for a past date or time.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await createBookingAction({
@@ -258,6 +266,7 @@ export default function AddBookingPage() {
                 <input
                   id="ab-date"
                   type="date"
+                  min={today}
                   value={form.date}
                   onChange={(e) => fieldVal({ date: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
