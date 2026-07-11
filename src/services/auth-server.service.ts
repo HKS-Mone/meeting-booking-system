@@ -15,12 +15,22 @@ type JwtPayload = {
 };
 
 const JWT_COOKIE_NAME = 'auth_token_mone';
-const JWT_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 7;
+const JWT_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 14;
 const PASSWORD_KEY_LENGTH = 64;
 const PASSWORD_DIGEST = 'sha256';
 
+
 function getJwtSecret() {
-  return process.env.JWT_SECRET ?? 'development-only-change-me';
+  const secret = process.env.JWT_SECRET?.trim();
+  if (secret) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET is not set. Refusing to sign tokens with an insecure default in production.');
+  }
+
+  return 'development-only-change-me';
 }
 
 function base64Url(input: Buffer | string) {
