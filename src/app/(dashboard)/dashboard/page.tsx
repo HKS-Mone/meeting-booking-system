@@ -101,9 +101,6 @@ export default async function DashboardPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-3xl font-bold leading-none text-gray-900 sm:text-4xl">
-                WIP Meeting
-              </p>
             </div>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:bg-orange-100 sm:h-14 sm:w-14">
               <Video className="h-5 w-5 text-orange-600 transition-transform duration-200 group-hover:-translate-y-0.5 sm:h-7 sm:w-7" />
@@ -112,7 +109,7 @@ export default async function DashboardPage() {
           {currentOngoingBooking ? (
             <div className="mt-8 grid gap-3 sm:mt-7 sm:grid-cols-2">
               <div className="rounded-lg bg-orange-50/70 px-3 py-2.5 transition-colors duration-200 group-hover:bg-orange-100/70">
-                <p className="text-[11px] font-medium uppercase text-orange-600">Time period</p>
+                <p className="text-[11px] font-medium uppercase text-orange-600">Meeting Time</p>
                 <p className="mt-1 truncate text-sm font-semibold text-gray-900">
                   {formatTime(currentOngoingBooking.startTime)} - {formatTime(currentOngoingBooking.endTime)}
                 </p>
