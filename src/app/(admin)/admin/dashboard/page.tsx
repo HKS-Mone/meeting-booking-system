@@ -100,7 +100,7 @@ export default async function AdminDashboardPage() {
           {currentOngoingBooking ? (
             <div className="mt-8 grid gap-3 sm:mt-7 sm:grid-cols-2">
               <div className="rounded-lg bg-orange-50/70 px-3 py-2.5 transition-colors duration-200 group-hover:bg-orange-100/70">
-                <p className="text-[11px] font-medium uppercase text-orange-600">Time period</p>
+                <p className="text-[11px] font-medium uppercase text-orange-600">Meeting Time</p>
                 <p className="mt-1 truncate text-sm font-semibold text-gray-900">
                   {formatTime(currentOngoingBooking.startTime)} - {formatTime(currentOngoingBooking.endTime)}
                 </p>
