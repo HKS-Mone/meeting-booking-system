@@ -433,7 +433,7 @@ export default function ManageUsersPage() {
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl space-y-3 sm:space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
-              Employee management
+              Employee overview
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
