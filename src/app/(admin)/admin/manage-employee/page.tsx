@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useUser } from '../../../../../hook/useUser';
 import type { User, Department } from '@/lib/types';
 import Modal from '@/components/ui/Modal';
@@ -456,29 +455,28 @@ export default function ManageUsersPage() {
               </button>
             </div>
           </div>
+
+          {/* Stats — sits parallel to the title/button column on large screens */}
+          <div className="w-full lg:w-auto lg:shrink-0">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[280px]">
+              {overviewCards.map(({ title, value, Icon, iconColor, iconBg }) => (
+                <div
+                  key={title}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white p-2.5 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+                    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 leading-none">{value}</p>
+                    <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate">{title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
-
-      {/* ── Employees overview dashboard ────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-          {overviewCards.map(({ title, value, sub, Icon, iconColor, iconBg, subColor }) => (
-            <div
-              key={title}
-              className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow duration-200"
-            >
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none">{value}</p>
-                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 truncate">{title}</p>
-                <p className={`text-[11px] mt-0.5 ${subColor}`}>{sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ── MOBILE: Card list ────────────── */}
       <div className="sm:hidden space-y-3">
