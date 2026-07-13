@@ -436,7 +436,7 @@ export default function ManageUsersPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-                M ONE MEETING ROOM
+                Manage Employee
               </h1>
               <p className="mt-1 text-sm text-blue-100">
                 Overview of all users, staff and departments
