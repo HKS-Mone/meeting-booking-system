@@ -7,7 +7,7 @@ import type { Booking, MeetingStatus } from '@/lib/types';
 import { getMeetingStatus, formatDate, formatTime } from '@/lib/utils';
 import { MeetingStatusBadge } from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
-import { Eye, Plus, Pencil, Trash2, CalendarDays, Clock, Building2, FileText, User } from 'lucide-react';
+import { Eye, Plus, Pencil, Trash2, CalendarDays, Clock, Building2, FileText, User, CalendarCheck, CircleCheckBig, PlayCircle } from 'lucide-react';
 import { useAuth } from '../../../../hook/useAuth';
 import { useBooking } from '../../../../hook/useBooking';
 import { useInfiniteScroll } from '../../../../hook/useInfiniteScroll';
@@ -99,6 +99,27 @@ export default function BookingHistoryPage() {
       .map(({ booking }) => booking);
   }, [withStatus, statusFilter, fromDate, toDate]);
 
+
+  /* Tally the current user's booking counts by status in a single pass. Time complexity: O(n). */
+  const historyStats = useMemo(() => {
+    return withStatus.reduce(
+      (acc, { status }) => {
+        acc.total++;
+        if (status === 'UPCOMING') acc.upcoming++;
+        else if (status === 'ONGOING') acc.ongoing++;
+        else if (status === 'COMPLETE') acc.completed++;
+        return acc;
+      },
+      { total: 0, upcoming: 0, ongoing: 0, completed: 0 },
+    );
+  }, [withStatus]);
+
+  const statCards = [
+    { title: 'Total Bookings', value: historyStats.total,     Icon: CalendarCheck,  iconColor: 'text-indigo-600',  iconBg: 'bg-indigo-50' },
+    { title: 'Upcoming',       value: historyStats.upcoming,  Icon: Clock,          iconColor: 'text-amber-600',   iconBg: 'bg-amber-50' },
+    { title: 'Ongoing',        value: historyStats.ongoing,   Icon: PlayCircle,     iconColor: 'text-blue-600',    iconBg: 'bg-blue-50' },
+    { title: 'Completed',      value: historyStats.completed, Icon: CircleCheckBig, iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50' },
+  ];
 
   const { visibleCount, hasMore, sentinelRef } = useInfiniteScroll(
     filtered.length,
@@ -194,17 +215,60 @@ export default function BookingHistoryPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        <button
-          id="add-booking-btn"
-          onClick={() => router.push('/booking-history/add-booking')}
-          className="group flex items-center gap-2 px-5 py-2.5 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95"
-        >
-          <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
-          New Booking
-        </button>
-      </div>
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#07104a] via-[#0d2a66] to-[#123c87] p-4 sm:p-6 text-white shadow-[0_20px_50px_rgba(13,42,102,0.28)]">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-sky-400 blur-3xl" />
+          <div className="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-cyan-300 blur-3xl" />
+        </div>
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
+              My bookings
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
+                Booking History
+              </h1>
+              <p className="mt-1 text-sm text-blue-100">
+                View, filter and manage your meeting bookings
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <button
+                id="add-booking-btn"
+                onClick={() => router.push('/booking-history/add-booking')}
+                className="group inline-flex items-center gap-2 justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66] transition hover:bg-slate-100"
+              >
+                <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
+                New Booking
+              </button>
+            </div>
+          </div>
+
+          {/* Stats — sits parallel to the title/button column on large screens */}
+          <div className="w-full lg:w-auto lg:shrink-0">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[280px]">
+              {statCards.map(({ title, value, Icon, iconColor, iconBg }) => (
+                <div
+                  key={title}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white p-2.5 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+                    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 leading-none">
+                      {isLoading ? '—' : value}
+                    </p>
+                    <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate">{title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
