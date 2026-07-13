@@ -423,45 +423,60 @@ export default function ManageUsersPage() {
   return (
     <div className="space-y-5">
 
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-500">Admin Panel › Manage Users</p>
-        <button
-          id="add-user-btn"
-          onClick={openAdd}
-          disabled={!canManageEmployees}
-          className="flex items-center gap-2 px-5 py-2.5 md:py-3 text-white rounded-xl text-sm font-semibold transition-all duration-150 hover:shadow-lg hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
-          style={{ background: canManageEmployees ? 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)' : '#94a3b8', boxShadow: canManageEmployees ? '0 4px 12px rgba(37,99,235,0.3)' : 'none' }}
-          title={canManageEmployees ? 'Add employee' : 'Only super admins can add users'}
-        >
-          <Plus className="w-4.5 h-4.5" />
-          Add Employee
-        </button>
-      </div>
-
-      {/* ── Employees overview dashboard ────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Manage Employees</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of all users, staff and departments</p>
-
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mt-5">
-          {overviewCards.map(({ title, value, sub, Icon, iconColor, iconBg, subColor }) => (
-            <div
-              key={title}
-              className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow duration-200"
-            >
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none">{value}</p>
-                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 truncate">{title}</p>
-                <p className={`text-[11px] mt-0.5 ${subColor}`}>{sub}</p>
-              </div>
-            </div>
-          ))}
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#07104a] via-[#0d2a66] to-[#123c87] p-4 sm:p-6 text-white shadow-[0_20px_50px_rgba(13,42,102,0.28)]">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-sky-400 blur-3xl" />
+          <div className="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-cyan-300 blur-3xl" />
         </div>
-      </div>
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
+              Employee overview
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
+                Manage Employee
+              </h1>
+              <p className="mt-1 text-sm text-blue-100">
+                Overview of all users, staff and departments
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <button
+                id="add-user-btn"
+                onClick={openAdd}
+                disabled={!canManageEmployees}
+                className="inline-flex items-center gap-2 justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66] transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={canManageEmployees ? 'Add employee' : 'Only super admins can add users'}
+              >
+                <Plus className="w-4 h-4" />
+                Add Employee
+              </button>
+            </div>
+          </div>
+
+          {/* Stats — sits parallel to the title/button column on large screens */}
+          <div className="w-full lg:w-auto lg:shrink-0">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[280px]">
+              {overviewCards.map(({ title, value, Icon, iconColor, iconBg }) => (
+                <div
+                  key={title}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white p-2.5 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+                    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 leading-none">{value}</p>
+                    <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate">{title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── MOBILE: Card list ────────────── */}
       <div className="sm:hidden space-y-3">

@@ -521,54 +521,73 @@ export default function ManageBookingsPage() {
   // ─── Render ───────────────────────────────
   return (
     <div className="space-y-5 animate-fade-in-up">
-      {/* ── Header + stat cards ─────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Manage Bookings</h1>
-        <p className="mt-1 text-sm text-gray-500">View, manage and organize all meeting bookings</p>
-
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mt-5">
-          {statCards.map(({ title, value, sub, Icon, iconColor, iconBg, subColor }) => (
-            <div
-              key={title}
-              className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow duration-200"
-            >
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none">
-                  {isLoading ? '—' : value}
-                </p>
-                <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 truncate">{title}</p>
-                <p className={`text-[11px] mt-0.5 ${subColor}`}>{sub}</p>
-              </div>
-            </div>
-          ))}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#07104a] via-[#0d2a66] to-[#123c87] p-4 sm:p-6 text-white shadow-[0_20px_50px_rgba(13,42,102,0.28)]">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-sky-400 blur-3xl" />
+          <div className="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-cyan-300 blur-3xl" />
         </div>
-      </div>
-
-      {/* ── Toolbar: search, new booking, filters ───────────────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              id="booking-search"
-              type="text"
-              placeholder="Search by booking ID, description or department..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
-            />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
+              Booking overview
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
+                Manage Bookings
+              </h1>
+              <p className="mt-1 text-sm text-blue-100">
+                View, manage and organize all meeting bookings
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <button
+                id="add-booking-btn"
+                onClick={() => router.push('/admin/manage-bookings/add-booking')}
+                className="group inline-flex items-center gap-2 justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66] transition hover:bg-slate-100"
+              >
+                <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
+                New Booking
+              </button>
+            </div>
           </div>
-          <button
-            id="add-booking-btn"
-            onClick={() => router.push('/admin/manage-bookings/add-booking')}
-            className="group flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-200 active:scale-95"
-          >
-            <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
-            New Booking
-          </button>
+
+          {/* Stats — sits parallel to the title/button column on large screens */}
+          <div className="w-full lg:w-auto lg:shrink-0">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[280px]">
+              {statCards.map(({ title, value, Icon, iconColor, iconBg }) => (
+                <div
+                  key={title}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white p-2.5 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+                    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 leading-none">
+                      {isLoading ? '—' : value}
+                    </p>
+                    <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate">{title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Toolbar: search, filters ─────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 space-y-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            id="booking-search"
+            type="text"
+            placeholder="Search by booking ID, description or department..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
