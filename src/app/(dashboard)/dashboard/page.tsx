@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { CalendarDays, Plus, Video, CheckCircle } from 'lucide-react';
+import { Plus, Video, CheckCircle } from 'lucide-react';
 import UpcomingMeetings from '@/components/dashboard/UpcomingMeetings';
 import MiniCalendar from '@/components/dashboard/MiniCalendar';
 import { getAllBookings, getMyBookings, getSessionUser } from '@/services/booking.reader';
@@ -13,12 +13,6 @@ export const metadata: Metadata = {
   title: 'M ONE INTEGRATION PVT LTD',
   description: 'Employee overview of meeting room bookings.',
 };
-
-function getGreeting(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 // Time complexity: O(n log n), where n is the total number of bookings scanned.
 export default async function DashboardPage() {
@@ -57,18 +51,37 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-            {getGreeting(now.getHours())}{firstName ? `, ${firstName}` : ''}! 👋
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">Here&apos;s your meeting overview for today.</p>
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#07104a] via-[#0d2a66] to-[#123c87] p-4 sm:p-6 text-white shadow-[0_20px_50px_rgba(13,42,102,0.28)]">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-sky-400 blur-3xl" />
+          <div className="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-cyan-300 blur-3xl" />
         </div>
-        <div className="inline-flex w-fit items-center gap-3 self-center rounded-xl border border-gray-100 bg-white px-4 py-2.5 shadow-sm sm:self-auto">
-          <CalendarDays className="h-5 w-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-semibold text-gray-800">{format(now, 'MMM dd, yyyy')}</p>
-            <p className="text-xs text-gray-500">{format(now, 'EEEE')}</p>
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
+              {format(now, 'EEEE, MMM dd, yyyy')}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
+                Hello{firstName ? `, ${firstName}` : ''}
+              </h1>
+              <p className="mt-1 text-sm text-blue-100">Here&apos;s your meeting overview for today.</p>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Link
+                href="/booking-history/add-booking"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0d2a66] transition hover:bg-slate-100"
+              >
+                <Plus className="h-4 w-4" />
+                Add Booking
+              </Link>
+              <Link
+                href="/calendar"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Open Calendar
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -149,16 +162,6 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex justify-center">
-        <Link
-          href="/booking-history/add-booking"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
-        >
-          <Plus className="h-4 w-7" />
-          Add Booking
-        </Link>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
