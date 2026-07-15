@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Plus, Video, CheckCircle } from "lucide-react";
 import UpcomingMeetings from "@/components/dashboard/UpcomingMeetings";
 import { getAllBookings, getSessionUser } from "@/services/booking.reader";
@@ -25,8 +24,6 @@ export default async function DashboardPage() {
     getSessionUser(),
   ]);
 
-  const firstName = sessionUser?.name.split(" ")[0];
-  const now = new Date();
   const nowIso = getBusinessNowIso();
 
   // Every section on this page is scoped to the logged-in user's department.
