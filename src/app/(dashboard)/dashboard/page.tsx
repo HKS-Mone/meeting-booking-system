@@ -26,12 +26,7 @@ export default async function DashboardPage() {
 
   const nowIso = getBusinessNowIso();
 
-  // Every section on this page is scoped to the logged-in user's department.
-  const departmentBookings = allBookings.filter(
-    (b) => b.departmentId === sessionUser?.departmentId,
-  );
-
-  const bookingsWithStatus = departmentBookings.map((booking) => ({
+  const bookingsWithStatus = allBookings.map((booking) => ({
     booking,
     status: getMeetingStatus(booking.startTime, booking.endTime),
   }));
@@ -42,11 +37,11 @@ export default async function DashboardPage() {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
   const upcomingPreview = upcomingBookings.slice(0, 4);
 
-  const activeNow = departmentBookings.filter(
+  const activeNow = allBookings.filter(
     (b) => b.startTime <= nowIso && b.endTime >= nowIso,
   );
   const currentOngoingBooking = activeNow[0];
-  const upcoming = departmentBookings.filter((b) => b.startTime > nowIso);
+  const upcoming = allBookings.filter((b) => b.startTime > nowIso);
   const nextMeeting = upcoming.reduce(
     (earliest, booking) =>
       earliest && earliest.startTime <= booking.startTime ? earliest : booking,
