@@ -66,15 +66,12 @@ export default async function DashboardPage() {
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl space-y-3 sm:space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
-              {format(now, "EEEE, MMM dd, yyyy")}
+              Employee overview
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-                Hello{firstName ? `, ${firstName}` : ""}
+                M ONE MEETING ROOM
               </h1>
-              <p className="mt-1 text-sm text-blue-100">
-                Here&apos;s your meeting overview for today.
-              </p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link
