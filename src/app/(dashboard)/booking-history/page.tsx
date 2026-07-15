@@ -75,8 +75,11 @@ export default function BookingHistoryPage() {
 
 
   const withStatus = useMemo(
-    () => bookings.map((booking) => ({ booking, status: getMeetingStatus(booking.startTime, booking.endTime) })),
-    [bookings],
+    () =>
+      bookings
+        .filter((booking) => booking.departmentId === currentUser?.departmentId)
+        .map((booking) => ({ booking, status: getMeetingStatus(booking.startTime, booking.endTime) })),
+    [bookings, currentUser?.departmentId],
   );
 
 

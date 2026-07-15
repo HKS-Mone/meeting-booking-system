@@ -34,9 +34,6 @@ export default function UpcomingMeetings({ bookings }: UpcomingMeetingsProps) {
             </div>
             <div className="min-w-0 flex-1 basis-40">
               <p className="font-semibold text-sm text-gray-800 truncate">{b.purpose || b.bookingCode}</p>
-              <p className="text-xs text-gray-500 truncate">
-                {b.department?.name ?? 'No department'} • {b.room?.name ?? 'No room'}
-              </p>
             </div>
             <div className="ml-auto shrink-0 text-right sm:ml-0">
               {meetingIsToday ? (
