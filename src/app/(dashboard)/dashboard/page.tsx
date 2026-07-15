@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   description: 'Employee overview of meeting room bookings.',
 };
 
-// Time complexity: O(n log n), where n is the total number of bookings scanned.
 export default async function DashboardPage() {
   const [allBookings, sessionUser] = await Promise.all([
     getAllBookings(),
@@ -31,12 +30,6 @@ export default async function DashboardPage() {
     status: getMeetingStatus(booking.startTime, booking.endTime),
   }));
 
-  const upcomingBookings = bookingsWithStatus
-    .filter(({ status }) => status === "UPCOMING" || status === "ONGOING")
-    .map(({ booking }) => booking)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const upcomingPreview = upcomingBookings.slice(0, 4);
-
   const activeNow = allBookings.filter(
     (b) => b.startTime <= nowIso && b.endTime >= nowIso,
   );
@@ -47,6 +40,18 @@ export default async function DashboardPage() {
       earliest && earliest.startTime <= booking.startTime ? earliest : booking,
     upcoming[0],
   );
+  const highlightedBookingIds = new Set<string>();
+  if (currentOngoingBooking) highlightedBookingIds.add(currentOngoingBooking.id);
+  if (nextMeeting) highlightedBookingIds.add(nextMeeting.id);
+
+  const upcomingBookings = bookingsWithStatus
+    .filter(
+      ({ booking, status }) =>
+        status === "UPCOMING" && !highlightedBookingIds.has(booking.id),
+    )
+    .map(({ booking }) => booking)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const upcomingPreview = upcomingBookings.slice(0, 4);
 
   return (
     <div className="space-y-5 sm:space-y-6">
