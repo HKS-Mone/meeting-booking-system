@@ -8,14 +8,12 @@ import { addMonths, subMonths } from 'date-fns';
 import type { Booking } from '@/lib/types';
 import { getBookingsAction } from '@/services/booking.service';
 import { useToastStore } from '@/components/ui/Toast';
-import { useAuth } from '../../../../hook/useAuth';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const addToast = useToastStore((state) => state.addToast);
-  const { currentUser } = useAuth();
 
   useEffect(() => {
     let ignore = false;
@@ -44,15 +42,13 @@ export default function CalendarPage() {
   const monthBookings = useMemo(
     () =>
       bookings.filter((booking) => {
-        if (booking.departmentId !== currentUser?.departmentId) return false;
-
         const bookingDate = parseDateOnly(booking.date);
         return (
           bookingDate.getFullYear() === currentDate.getFullYear() &&
           bookingDate.getMonth() === currentDate.getMonth()
         );
       }),
-    [bookings, currentDate, currentUser?.departmentId],
+    [bookings, currentDate],
   );
 
   return (
